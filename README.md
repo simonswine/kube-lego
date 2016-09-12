@@ -102,8 +102,8 @@ spec:
 
 ## Full deployment examples
 
-- [Nginx Ingress Controller](examples/nginx/README.md)
-- [GCE Load Balancers](examples/gce/README.md)
+- [Nginx Ingress Controller](https://github.com/jetstack/kube-lego/blob/master/examples/nginx/README.md)
+- [GCE Load Balancers](https://github.com/jetstack/kube-lego/blob/master/examples/gce/README.md)
 
 ## Authors
 
