@@ -22,6 +22,7 @@ type recoveryKeyMessage struct {
 type registrationMessage struct {
 	Resource string   `json:"resource"`
 	Contact  []string `json:"contact"`
+	Delete   bool     `json:"delete,omitempty"`
 	//	RecoveryKey recoveryKeyMessage `json:"recoveryKey,omitempty"`
 }
 
@@ -112,4 +113,5 @@ type CertificateResource struct {
 	AccountRef    string `json:"accountRef,omitempty"`
 	PrivateKey    []byte `json:"-"`
 	Certificate   []byte `json:"-"`
+	CSR           []byte `json:"-"`
 }

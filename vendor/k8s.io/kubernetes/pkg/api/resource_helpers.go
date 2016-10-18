@@ -1,5 +1,5 @@
 /*
-Copyright 2014 The Kubernetes Authors All rights reserved.
+Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,10 @@ limitations under the License.
 package api
 
 import (
+	"time"
+
 	"k8s.io/kubernetes/pkg/api/resource"
+	"k8s.io/kubernetes/pkg/api/unversioned"
 )
 
 // Returns string version of ResourceName.
@@ -48,6 +51,13 @@ func (self *ResourceList) Pods() *resource.Quantity {
 	return &resource.Quantity{}
 }
 
+func (self *ResourceList) NvidiaGPU() *resource.Quantity {
+	if val, ok := (*self)[ResourceNvidiaGPU]; ok {
+		return &val
+	}
+	return &resource.Quantity{}
+}
+
 func GetContainerStatus(statuses []ContainerStatus, name string) (ContainerStatus, bool) {
 	for i := range statuses {
 		if statuses[i].Name == name {
@@ -66,6 +76,24 @@ func GetExistingContainerStatus(statuses []ContainerStatus, name string) Contain
 	return ContainerStatus{}
 }
 
+// IsPodAvailable returns true if a pod is available; false otherwise.
+// Precondition for an available pod is that it must be ready. On top
+// of that, there are two cases when a pod can be considered available:
+// 1. minReadySeconds == 0, or
+// 2. LastTransitionTime (is set) + minReadySeconds < current time
+func IsPodAvailable(pod *Pod, minReadySeconds int32, now unversioned.Time) bool {
+	if !IsPodReady(pod) {
+		return false
+	}
+
+	c := GetPodReadyCondition(pod.Status)
+	minReadySecondsDuration := time.Duration(minReadySeconds) * time.Second
+	if minReadySeconds == 0 || !c.LastTransitionTime.IsZero() && c.LastTransitionTime.Add(minReadySecondsDuration).Before(now.Time) {
+		return true
+	}
+	return false
+}
+
 // IsPodReady returns true if a pod is ready; false otherwise.
 func IsPodReady(pod *Pod) bool {
 	return IsPodReadyConditionTrue(pod.Status)
@@ -80,12 +108,66 @@ func IsPodReadyConditionTrue(status PodStatus) bool {
 // Extracts the pod ready condition from the given status and returns that.
 // Returns nil if the condition is not present.
 func GetPodReadyCondition(status PodStatus) *PodCondition {
-	for i, c := range status.Conditions {
-		if c.Type == PodReady {
-			return &status.Conditions[i]
+	_, condition := GetPodCondition(&status, PodReady)
+	return condition
+}
+
+// GetPodCondition extracts the provided condition from the given status and returns that.
+// Returns nil and -1 if the condition is not present, and the index of the located condition.
+func GetPodCondition(status *PodStatus, conditionType PodConditionType) (int, *PodCondition) {
+	if status == nil {
+		return -1, nil
+	}
+	for i := range status.Conditions {
+		if status.Conditions[i].Type == conditionType {
+			return i, &status.Conditions[i]
 		}
 	}
-	return nil
+	return -1, nil
+}
+
+// GetNodeCondition extracts the provided condition from the given status and returns that.
+// Returns nil and -1 if the condition is not present, and the index of the located condition.
+func GetNodeCondition(status *NodeStatus, conditionType NodeConditionType) (int, *NodeCondition) {
+	if status == nil {
+		return -1, nil
+	}
+	for i := range status.Conditions {
+		if status.Conditions[i].Type == conditionType {
+			return i, &status.Conditions[i]
+		}
+	}
+	return -1, nil
+}
+
+// Updates existing pod condition or creates a new one. Sets LastTransitionTime to now if the
+// status has changed.
+// Returns true if pod condition has changed or has been added.
+func UpdatePodCondition(status *PodStatus, condition *PodCondition) bool {
+	condition.LastTransitionTime = unversioned.Now()
+	// Try to find this pod condition.
+	conditionIndex, oldCondition := GetPodCondition(status, condition.Type)
+
+	if oldCondition == nil {
+		// We are adding new pod condition.
+		status.Conditions = append(status.Conditions, *condition)
+		return true
+	} else {
+		// We are updating an existing condition, so we need to check if it has changed.
+		if condition.Status == oldCondition.Status {
+			condition.LastTransitionTime = oldCondition.LastTransitionTime
+		}
+
+		isEqual := condition.Status == oldCondition.Status &&
+			condition.Reason == oldCondition.Reason &&
+			condition.Message == oldCondition.Message &&
+			condition.LastProbeTime.Equal(oldCondition.LastProbeTime) &&
+			condition.LastTransitionTime.Equal(oldCondition.LastTransitionTime)
+
+		status.Conditions[conditionIndex] = *condition
+		// Return true if one of the fields have changed.
+		return !isEqual
+	}
 }
 
 // IsNodeReady returns true if a node is ready; false otherwise.
@@ -106,15 +188,40 @@ func PodRequestsAndLimits(pod *Pod) (reqs map[ResourceName]resource.Quantity, li
 		for name, quantity := range container.Resources.Requests {
 			if value, ok := reqs[name]; !ok {
 				reqs[name] = *quantity.Copy()
-			} else if err = value.Add(quantity); err != nil {
-				return nil, nil, err
+			} else {
+				value.Add(quantity)
+				reqs[name] = value
 			}
 		}
 		for name, quantity := range container.Resources.Limits {
 			if value, ok := limits[name]; !ok {
 				limits[name] = *quantity.Copy()
-			} else if err = value.Add(quantity); err != nil {
-				return nil, nil, err
+			} else {
+				value.Add(quantity)
+				limits[name] = value
+			}
+		}
+	}
+	// init containers define the minimum of any resource
+	for _, container := range pod.Spec.InitContainers {
+		for name, quantity := range container.Resources.Requests {
+			value, ok := reqs[name]
+			if !ok {
+				reqs[name] = *quantity.Copy()
+				continue
+			}
+			if quantity.Cmp(value) > 0 {
+				reqs[name] = *quantity.Copy()
+			}
+		}
+		for name, quantity := range container.Resources.Limits {
+			value, ok := limits[name]
+			if !ok {
+				limits[name] = *quantity.Copy()
+				continue
+			}
+			if quantity.Cmp(value) > 0 {
+				limits[name] = *quantity.Copy()
 			}
 		}
 	}

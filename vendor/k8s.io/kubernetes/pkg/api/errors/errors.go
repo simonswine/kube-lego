@@ -1,5 +1,5 @@
 /*
-Copyright 2014 The Kubernetes Authors All rights reserved.
+Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,11 +31,9 @@ import (
 const (
 	StatusUnprocessableEntity = 422
 	StatusTooManyRequests     = 429
-	// HTTP recommendations are for servers to define 5xx error codes
-	// for scenarios not covered by behavior. In this case, ServerTimeout
-	// is an indication that a transient server error has occurred and the
-	// client *should* retry, with an optional Retry-After header to specify
-	// the back off window.
+	// StatusServerTimeout is an indication that a transient server error has
+	// occurred and the client *should* retry, with an optional Retry-After
+	// header to specify the back off window.
 	StatusServerTimeout = 504
 )
 
@@ -93,7 +91,7 @@ func FromObject(obj runtime.Object) error {
 }
 
 // NewNotFound returns a new error which indicates that the resource of the kind and the name was not found.
-func NewNotFound(qualifiedResource unversioned.GroupResource, name string) error {
+func NewNotFound(qualifiedResource unversioned.GroupResource, name string) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status: unversioned.StatusFailure,
 		Code:   http.StatusNotFound,
@@ -108,7 +106,7 @@ func NewNotFound(qualifiedResource unversioned.GroupResource, name string) error
 }
 
 // NewAlreadyExists returns an error indicating the item requested exists by that identifier.
-func NewAlreadyExists(qualifiedResource unversioned.GroupResource, name string) error {
+func NewAlreadyExists(qualifiedResource unversioned.GroupResource, name string) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status: unversioned.StatusFailure,
 		Code:   http.StatusConflict,
@@ -124,7 +122,7 @@ func NewAlreadyExists(qualifiedResource unversioned.GroupResource, name string) 
 
 // NewUnauthorized returns an error indicating the client is not authorized to perform the requested
 // action.
-func NewUnauthorized(reason string) error {
+func NewUnauthorized(reason string) *StatusError {
 	message := reason
 	if len(message) == 0 {
 		message = "not authorized"
@@ -138,7 +136,7 @@ func NewUnauthorized(reason string) error {
 }
 
 // NewForbidden returns an error indicating the requested action was forbidden
-func NewForbidden(qualifiedResource unversioned.GroupResource, name string, err error) error {
+func NewForbidden(qualifiedResource unversioned.GroupResource, name string, err error) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status: unversioned.StatusFailure,
 		Code:   http.StatusForbidden,
@@ -153,7 +151,7 @@ func NewForbidden(qualifiedResource unversioned.GroupResource, name string, err 
 }
 
 // NewConflict returns an error indicating the item can't be updated as provided.
-func NewConflict(qualifiedResource unversioned.GroupResource, name string, err error) error {
+func NewConflict(qualifiedResource unversioned.GroupResource, name string, err error) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status: unversioned.StatusFailure,
 		Code:   http.StatusConflict,
@@ -163,12 +161,12 @@ func NewConflict(qualifiedResource unversioned.GroupResource, name string, err e
 			Kind:  qualifiedResource.Resource,
 			Name:  name,
 		},
-		Message: fmt.Sprintf("%s %q cannot be updated: %v", qualifiedResource.String(), name, err),
+		Message: fmt.Sprintf("Operation cannot be fulfilled on %s %q: %v", qualifiedResource.String(), name, err),
 	}}
 }
 
 // NewGone returns an error indicating the item no longer available at the server and no forwarding address is known.
-func NewGone(message string) error {
+func NewGone(message string) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status:  unversioned.StatusFailure,
 		Code:    http.StatusGone,
@@ -178,7 +176,7 @@ func NewGone(message string) error {
 }
 
 // NewInvalid returns an error indicating the item is invalid and cannot be processed.
-func NewInvalid(qualifiedKind unversioned.GroupKind, name string, errs field.ErrorList) error {
+func NewInvalid(qualifiedKind unversioned.GroupKind, name string, errs field.ErrorList) *StatusError {
 	causes := make([]unversioned.StatusCause, 0, len(errs))
 	for i := range errs {
 		err := errs[i]
@@ -203,7 +201,7 @@ func NewInvalid(qualifiedKind unversioned.GroupKind, name string, errs field.Err
 }
 
 // NewBadRequest creates an error that indicates that the request is invalid and can not be processed.
-func NewBadRequest(reason string) error {
+func NewBadRequest(reason string) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status:  unversioned.StatusFailure,
 		Code:    http.StatusBadRequest,
@@ -213,7 +211,7 @@ func NewBadRequest(reason string) error {
 }
 
 // NewServiceUnavailable creates an error that indicates that the requested service is unavailable.
-func NewServiceUnavailable(reason string) error {
+func NewServiceUnavailable(reason string) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status:  unversioned.StatusFailure,
 		Code:    http.StatusServiceUnavailable,
@@ -223,7 +221,7 @@ func NewServiceUnavailable(reason string) error {
 }
 
 // NewMethodNotSupported returns an error indicating the requested action is not supported on this kind.
-func NewMethodNotSupported(qualifiedResource unversioned.GroupResource, action string) error {
+func NewMethodNotSupported(qualifiedResource unversioned.GroupResource, action string) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status: unversioned.StatusFailure,
 		Code:   http.StatusMethodNotAllowed,
@@ -238,7 +236,7 @@ func NewMethodNotSupported(qualifiedResource unversioned.GroupResource, action s
 
 // NewServerTimeout returns an error indicating the requested action could not be completed due to a
 // transient error, and the client should try again.
-func NewServerTimeout(qualifiedResource unversioned.GroupResource, operation string, retryAfterSeconds int) error {
+func NewServerTimeout(qualifiedResource unversioned.GroupResource, operation string, retryAfterSeconds int) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status: unversioned.StatusFailure,
 		Code:   http.StatusInternalServerError,
@@ -255,12 +253,12 @@ func NewServerTimeout(qualifiedResource unversioned.GroupResource, operation str
 
 // NewServerTimeoutForKind should not exist.  Server timeouts happen when accessing resources, the Kind is just what we
 // happened to be looking at when the request failed.  This delegates to keep code sane, but we should work towards removing this.
-func NewServerTimeoutForKind(qualifiedKind unversioned.GroupKind, operation string, retryAfterSeconds int) error {
+func NewServerTimeoutForKind(qualifiedKind unversioned.GroupKind, operation string, retryAfterSeconds int) *StatusError {
 	return NewServerTimeout(unversioned.GroupResource{Group: qualifiedKind.Group, Resource: qualifiedKind.Kind}, operation, retryAfterSeconds)
 }
 
 // NewInternalError returns an error indicating the item is invalid and cannot be processed.
-func NewInternalError(err error) error {
+func NewInternalError(err error) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status: unversioned.StatusFailure,
 		Code:   http.StatusInternalServerError,
@@ -274,7 +272,7 @@ func NewInternalError(err error) error {
 
 // NewTimeoutError returns an error indicating that a timeout occurred before the request
 // could be completed.  Clients may retry, but the operation may still complete.
-func NewTimeoutError(message string, retryAfterSeconds int) error {
+func NewTimeoutError(message string, retryAfterSeconds int) *StatusError {
 	return &StatusError{unversioned.Status{
 		Status:  unversioned.StatusFailure,
 		Code:    StatusServerTimeout,
@@ -287,7 +285,7 @@ func NewTimeoutError(message string, retryAfterSeconds int) error {
 }
 
 // NewGenericServerResponse returns a new error for server responses that are not in a recognizable form.
-func NewGenericServerResponse(code int, verb string, qualifiedResource unversioned.GroupResource, name, serverMessage string, retryAfterSeconds int, isUnexpectedResponse bool) error {
+func NewGenericServerResponse(code int, verb string, qualifiedResource unversioned.GroupResource, name, serverMessage string, retryAfterSeconds int, isUnexpectedResponse bool) *StatusError {
 	reason := unversioned.StatusReasonUnknown
 	message := fmt.Sprintf("the server responded with the status code %d but did not return more information", code)
 	switch code {
@@ -325,13 +323,13 @@ func NewGenericServerResponse(code int, verb string, qualifiedResource unversion
 	default:
 		if code >= 500 {
 			reason = unversioned.StatusReasonInternalError
-			message = "an error on the server has prevented the request from succeeding"
+			message = fmt.Sprintf("an error on the server (%q) has prevented the request from succeeding", serverMessage)
 		}
 	}
 	switch {
-	case !qualifiedResource.IsEmpty() && len(name) > 0:
+	case !qualifiedResource.Empty() && len(name) > 0:
 		message = fmt.Sprintf("%s (%s %s %s)", message, strings.ToLower(verb), qualifiedResource.String(), name)
-	case !qualifiedResource.IsEmpty():
+	case !qualifiedResource.Empty():
 		message = fmt.Sprintf("%s (%s %s)", message, strings.ToLower(verb), qualifiedResource.String())
 	}
 	var causes []unversioned.StatusCause
@@ -408,6 +406,11 @@ func IsForbidden(err error) bool {
 // by the client.
 func IsServerTimeout(err error) bool {
 	return reasonForError(err) == unversioned.StatusReasonServerTimeout
+}
+
+// IsInternalError determines if err is an error which indicates an internal server error.
+func IsInternalError(err error) bool {
+	return reasonForError(err) == unversioned.StatusReasonInternalError
 }
 
 // IsUnexpectedServerError returns true if the server response was not in the expected API format,
