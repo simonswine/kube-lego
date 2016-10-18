@@ -340,7 +340,7 @@ func (obj JsonWebEncryption) Decrypt(decryptionKey interface{}) ([]byte, error) 
 		return nil, ErrCryptoFailure
 	}
 
-	// The "zip" header paramter may only be present in the protected header.
+	// The "zip" header parameter may only be present in the protected header.
 	if obj.protected.Zip != "" {
 		plaintext, err = decompress(obj.protected.Zip, plaintext)
 	}

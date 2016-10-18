@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors All rights reserved.
+Copyright 2016 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,32 +16,22 @@ limitations under the License.
 
 package extensions
 
-// TODO(madhusudancs): Fix this when Scale group issues are resolved (see issue #18528).
-// import (
-// 	"fmt"
+import (
+	"strings"
+)
 
-// 	"k8s.io/kubernetes/pkg/api"
-// 	"k8s.io/kubernetes/pkg/api/unversioned"
-// )
+// SysctlsFromPodSecurityPolicyAnnotation parses an annotation value of the key
+// SysctlsSecurityPolocyAnnotationKey into a slice of sysctls. An empty slice
+// is returned if annotation is the empty string.
+func SysctlsFromPodSecurityPolicyAnnotation(annotation string) ([]string, error) {
+	if len(annotation) == 0 {
+		return []string{}, nil
+	}
 
-// // ScaleFromDeployment returns a scale subresource for a deployment.
-// func ScaleFromDeployment(deployment *Deployment) (*Scale, error) {
-// 	selector, err := unversioned.LabelSelectorAsSelector(deployment.Spec.Selector)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("invalid label selector: %v", err)
-// 	}
-// 	return &Scale{
-// 		ObjectMeta: api.ObjectMeta{
-// 			Name:              deployment.Name,
-// 			Namespace:         deployment.Namespace,
-// 			CreationTimestamp: deployment.CreationTimestamp,
-// 		},
-// 		Spec: ScaleSpec{
-// 			Replicas: deployment.Spec.Replicas,
-// 		},
-// 		Status: ScaleStatus{
-// 			Replicas: deployment.Status.Replicas,
-// 			Selector: selector.String(),
-// 		},
-// 	}, nil
-// }
+	return strings.Split(annotation, ","), nil
+}
+
+// PodAnnotationsFromSysctls creates an annotation value for a slice of Sysctls.
+func PodAnnotationsFromSysctls(sysctls []string) string {
+	return strings.Join(sysctls, ",")
+}

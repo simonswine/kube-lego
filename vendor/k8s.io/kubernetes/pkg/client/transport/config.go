@@ -1,5 +1,5 @@
 /*
-Copyright 2015 The Kubernetes Authors All rights reserved.
+Copyright 2015 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,9 @@ type Config struct {
 
 	// Bearer token for authentication
 	BearerToken string
+
+	// Impersonate is the username that this Config will impersonate
+	Impersonate string
 
 	// Transport may be used for custom HTTP behavior. This attribute may
 	// not be specified with the TLS client certificate options. Use

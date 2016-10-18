@@ -1,5 +1,5 @@
 /*
-Copyright 2014 The Kubernetes Authors All rights reserved.
+Copyright 2014 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,11 +30,17 @@ package runtime
 // TypeMeta is provided here for convenience. You may use it directly from this package or define
 // your own with the same fields.
 //
+// +k8s:deepcopy-gen=true
 // +protobuf=true
+// +k8s:openapi-gen=true
 type TypeMeta struct {
-	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
-	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty" protobuf:"bytes,1,opt,name=apiVersion"`
+	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty" protobuf:"bytes,2,opt,name=kind"`
 }
+
+const (
+	ContentTypeJSON string = "application/json"
+)
 
 // RawExtension is used to hold extensions in external versions.
 //
@@ -78,10 +84,14 @@ type TypeMeta struct {
 // in the Object. (TODO: In the case where the object is of an unknown type, a
 // runtime.Unknown object will be created and stored.)
 //
+// +k8s:deepcopy-gen=true
 // +protobuf=true
+// +k8s:openapi-gen=true
 type RawExtension struct {
-	// RawJSON is the underlying serialization of this object.
-	RawJSON []byte
+	// Raw is the underlying serialization of this object.
+	//
+	// TODO: Determine how to detect ContentType and ContentEncoding of 'Raw' data.
+	Raw []byte `protobuf:"bytes,1,opt,name=raw"`
 	// Object can hold a representation of this extension - useful for working with versioned
 	// structs.
 	Object Object `json:"-"`
@@ -93,13 +103,21 @@ type RawExtension struct {
 // TODO: Make this object have easy access to field based accessors and settors for
 // metadata and field mutatation.
 //
+// +k8s:deepcopy-gen=true
 // +protobuf=true
+// +k8s:openapi-gen=true
 type Unknown struct {
-	TypeMeta `json:",inline"`
-	// RawJSON will hold the complete JSON of the object which couldn't be matched
+	TypeMeta `json:",inline" protobuf:"bytes,1,opt,name=typeMeta"`
+	// Raw will hold the complete serialized object which couldn't be matched
 	// with a registered type. Most likely, nothing should be done with this
 	// except for passing it through the system.
-	RawJSON []byte
+	Raw []byte `protobuf:"bytes,2,opt,name=raw"`
+	// ContentEncoding is encoding used to encode 'Raw' data.
+	// Unspecified means no encoding.
+	ContentEncoding string `protobuf:"bytes,3,opt,name=contentEncoding"`
+	// ContentType  is serialization method used to serialize 'Raw'.
+	// Unspecified means ContentTypeJSON.
+	ContentType string `protobuf:"bytes,4,opt,name=contentType"`
 }
 
 // Unstructured allows objects that do not have Golang structs registered to be manipulated
@@ -108,24 +126,9 @@ type Unknown struct {
 // TODO: Make this object have easy access to field based accessors and settors for
 // metadata and field mutatation.
 type Unstructured struct {
-	TypeMeta `json:",inline"`
-
-	// Name is populated from metadata (if present) upon deserialization
-	Name string
-
 	// Object is a JSON compatible map with string, float, int, []interface{}, or map[string]interface{}
 	// children.
 	Object map[string]interface{}
-}
-
-// UnstructuredList allows lists that do not have Golang structs
-// registered to be manipulated generically. This can be used to deal
-// with the API lists from a plug-in.
-type UnstructuredList struct {
-	TypeMeta `json:",inline"`
-
-	// Items is a list of unstructured objects.
-	Items []*Unstructured `json:"items"`
 }
 
 // VersionedObjects is used by Decoders to give callers a way to access all versions
