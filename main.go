@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jetstack/kube-lego/pkg/kubelego"
+	"github.com/unya/kube-lego/pkg/kubelego"
 )
 
 var AppVersion = "unknown"

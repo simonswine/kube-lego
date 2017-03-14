@@ -147,6 +147,9 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 			err = backoff.Retry(op, b)
 			if err != nil {
 				log.Warnf("authorization failed after %s: %s", b.MaxElapsedTime, err)
+				a.acmeClient.RevokeAuthorization(context.Background(), domain)
+				log.Warnf("Revoking authorization")
+
 			} else {
 				log.Infof("authorization successful")
 			}
