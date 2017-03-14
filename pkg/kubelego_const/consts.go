@@ -10,6 +10,7 @@ const AcmeRegistrationUrl = "acme-registration-url"
 const AcmePrivateKey = k8sApi.TLSPrivateKeyKey
 const AcmeHttpChallengePath = "/.well-known/acme-challenge"
 const AcmeHttpSelfTest = "/.well-known/acme-challenge/_selftest"
+const DefaultAnnotationEnabled = "kubernetes.io/tls-acme"
 
 const TLSCertKey = k8sApi.TLSCertKey
 const TLSPrivateKeyKey = k8sApi.TLSPrivateKeyKey

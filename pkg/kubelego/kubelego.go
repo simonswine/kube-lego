@@ -250,7 +250,7 @@ func (kl *KubeLego) paramsLego() error {
 		kl.legoServiceNameGce = "kube-lego-gce"
 	}
 
-	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"),",")
+	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"), ",")
 	if len(kl.legoSupportedIngressClass) == 1 {
 		kl.legoSupportedIngressClass = kubelego.SupportedIngressClasses
 	}
@@ -322,6 +322,8 @@ func (kl *KubeLego) paramsLego() error {
 
 	annotationEnabled := os.Getenv("LEGO_KUBE_ANNOTATION")
 	if len(annotationEnabled) == 0 {
+		kubelego.AnnotationEnabled = kubelego.DefaultAnnotationEnabled
+	} else {
 		kubelego.AnnotationEnabled = annotationEnabled
 	}
 
