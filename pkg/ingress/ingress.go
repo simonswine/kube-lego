@@ -113,7 +113,7 @@ func (o *Ingress) client() k8sExtensionsTyped.IngressInterface {
 func (o *Ingress) Save() (err error) {
 	var obj *k8sExtensions.Ingress
 
-	// check if it contians rules
+	// check if it contains rules
 	if len(o.IngressApi.Spec.Rules) > 0 {
 		if o.exists {
 			obj, err = o.client().Update(o.IngressApi)
