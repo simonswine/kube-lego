@@ -16,6 +16,8 @@ type KubeLego interface {
 	Log() *logrus.Entry
 	AcmeClient() Acme
 	LegoHTTPPort() intstr.IntOrString
+	LegoChallengeType() string
+	LegoChallengeDnsProvider() string
 	LegoEmail() string
 	LegoURL() string
 	LegoNamespace() string
@@ -28,6 +30,7 @@ type KubeLego interface {
 	LegoMinimumValidity() time.Duration
 	LegoPodIP() net.IP
 	IngressProvider(string) (IngressProvider, error)
+	DnsProvider(string) (DnsProvider, error)
 	Version() string
 	AcmeUser() (map[string][]byte, error)
 	SaveAcmeUser(map[string][]byte) error
@@ -78,4 +81,11 @@ type IngressProvider interface {
 	Process(Ingress) error
 	Reset() error
 	Finalize() error
+}
+
+type DnsProvider interface {
+	Log() *logrus.Entry
+	Finalize() error
+	CreateRecordset(string, string) error
+	TestRecordset() ( error)
 }

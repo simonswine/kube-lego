@@ -13,13 +13,13 @@ const AcmeHttpSelfTest = "/.well-known/acme-challenge/_selftest"
 
 const TLSCertKey = k8sApi.TLSCertKey
 const TLSPrivateKeyKey = k8sApi.TLSPrivateKeyKey
-const TLSCaKey = "ca.crt"
 
 const AnnotationIngressChallengeEndpoints = "kubernetes.io/tls-acme-challenge-endpoints"
-const AnnotationIngressChallengeEndpointsHash = "kubernetes.io/tls-acme-challenge-endpoints-hash"
 const AnnotationIngressClass = "kubernetes.io/ingress.class"
 const AnnotationSslRedirect = "ingress.kubernetes.io/ssl-redirect"
 const AnnotationKubeLegoManaged = "kubernetes.io/kube-lego-managed"
 
 var SupportedIngressClasses = []string{"nginx", "gce"}
 var AnnotationEnabled = "kubernetes.io/tls-acme"
+const ChallengeTypeDNS = "dns"
+const ChallengeTypeHTTP = "http"
