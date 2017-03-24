@@ -19,6 +19,7 @@ type Acme struct {
 	acmeAccount    *acme.Account
 
 	// challenge storage and its mutex
+	challengeType	      string
 	challengesMutex       sync.RWMutex
 	challengesHostToToken map[string]string
 	challengesTokenToKey  map[string]string

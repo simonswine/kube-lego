@@ -116,6 +116,68 @@ func (a *Acme) verifyDomain(domain string) (auth *acme.Authorization, err error)
 	return auth, nil
 }
 
+func (a *Acme) verifyDnsDomain(domain string) (auth *acme.Authorization, err error) {
+
+	auth, err = a.acmeClient.Authorize(context.Background(), domain)
+	if err != nil {
+		return nil, fmt.Errorf("getting authorization failed: %s", err)
+	}
+
+	var challenge *acme.Challenge
+
+	for _, ch := range auth.Challenges {
+		if ch.Type == "dns-01" {
+			challenge = ch
+			break
+		}
+	}
+
+	if challenge == nil {
+		return nil, fmt.Errorf("no dns-01 challenge was offered")
+	}
+
+	a.challengeType = "dns"
+	key, err := a.acmeClient.DNS01ChallengeRecord(challenge.Token)
+
+	if err != nil {
+		return nil, fmt.Errorf("error generating dns-01 response: %s", err)
+	}
+
+	a.Present(domain, challenge.Token, key)
+
+	dnsProvider, err := a.kubelego.DnsProvider(a.kubelego.LegoChallengeDnsProvider())
+
+	if err != nil {
+		return nil, fmt.Errorf("error loading dns provider: %s", err)
+
+	}
+
+	err = dnsProvider.CreateRecordset(domain, key)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating dns recordset : %s", err)
+
+	}
+
+	err = dnsProvider.TestRecordset()
+
+	if err != nil {
+		return nil, fmt.Errorf("error testing dns recordset : %s", err)
+
+	}
+
+	challenge, err = a.acmeClient.Accept(context.Background(), challenge)
+	if err != nil {
+		return nil, fmt.Errorf("requesting challenge failed: %s", err)
+	}
+
+	auth, err = a.acmeClient.WaitAuthorization(context.Background(), challenge.URI)
+	if err != nil {
+		return nil, fmt.Errorf("waiting for authorization failed: %s", err)
+	}
+	return auth, nil
+}
+
 func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err error) {
 	if a.ensureAcmeClient() != nil {
 		return data, err
@@ -132,7 +194,15 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 			log := a.Log().WithField("domain", domain)
 
 			op := func() error {
-				auth, err := a.verifyDomain(domain)
+				var auth *acme.Authorization
+				var err error
+
+				if a.kubelego.LegoChallengeType() == kubelego.ChallengeTypeHTTP {
+					auth, err = a.verifyDomain(domain)
+				} else if a.kubelego.LegoChallengeType() == kubelego.ChallengeTypeDNS {
+					auth, err = a.verifyDnsDomain(domain)
+				}
+
 				if err != nil {
 					log.Debugf("error while authorizing: %s", err)
 					return err

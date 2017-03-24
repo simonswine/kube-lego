@@ -20,6 +20,7 @@ import (
 	"github.com/jetstack/kube-lego/pkg/secret"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/jetstack/kube-lego/pkg/provider/route53"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
@@ -66,6 +67,14 @@ func (kl *KubeLego) IngressProvider(name string) (provider kubelego.IngressProvi
 	return
 }
 
+func (kl *KubeLego) DnsProvider(name string) (provider kubelego.DnsProvider, err error) {
+	provider, ok := kl.legoDnsProvider[name]
+	if !ok {
+		return nil, fmt.Errorf("dns provider '%s' not found", name)
+	}
+	return
+}
+
 func (kl *KubeLego) Init() {
 	kl.Log().Infof("kube-lego %s starting", kl.version)
 
@@ -89,6 +98,10 @@ func (kl *KubeLego) Init() {
 	kl.legoIngressProvider = map[string]kubelego.IngressProvider{
 		"gce":   gce.New(kl),
 		"nginx": nginx.New(kl),
+	}
+
+	kl.legoDnsProvider = map[string]kubelego.DnsProvider{
+		"route53": route53.New(kl),
 	}
 
 	// start workers
@@ -144,6 +157,10 @@ func (kl *KubeLego) LegoHTTPPort() intstr.IntOrString {
 	return kl.legoHTTPPort
 }
 
+func (kl *KubeLego) LegoChallengeDnsProvider() string {
+	return kl.legoChallengeDnsProvider
+}
+
 func (kl *KubeLego) LegoURL() string {
 	return kl.legoURL
 }
@@ -158,6 +175,10 @@ func (kl *KubeLego) LegoNamespace() string {
 
 func (kl *KubeLego) LegoPodIP() net.IP {
 	return kl.legoPodIP
+}
+
+func (kl *KubeLego) LegoChallengeType() string {
+	return kl.legoChallengeType
 }
 
 func (kl *KubeLego) LegoDefaultIngressClass() string {
@@ -250,7 +271,7 @@ func (kl *KubeLego) paramsLego() error {
 		kl.legoServiceNameGce = "kube-lego-gce"
 	}
 
-	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"),",")
+	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"), ",")
 	if len(kl.legoSupportedIngressClass) == 1 {
 		kl.legoSupportedIngressClass = kubelego.SupportedIngressClasses
 	}
@@ -321,8 +342,23 @@ func (kl *KubeLego) paramsLego() error {
 	}
 
 	annotationEnabled := os.Getenv("LEGO_KUBE_ANNOTATION")
-	if len(annotationEnabled) == 0 {
+	if len(annotationEnabled) != 0 {
 		kubelego.AnnotationEnabled = annotationEnabled
+	}
+
+	kl.legoChallengeType = kubelego.ChallengeTypeHTTP
+	legoChallenge := os.Getenv("LEGO_CHALLENGE") // TODO validate challenge http or dns
+
+	if len(legoChallenge) != 0 {
+		kl.legoChallengeType = kubelego.ChallengeTypeDNS
+
+		legoChallengeDnsProvider := os.Getenv("LEGO_CHALLENGE_DNS_PROVIDER") // valid values aws, gce
+		if len(legoChallengeDnsProvider) == 0 {
+			return errors.New("Please provide the LEGO_CHALLENGE_DNS_PROVIDER variable")
+		} else {
+			kl.legoChallengeDnsProvider = legoChallengeDnsProvider
+
+		}
 	}
 
 	return nil
