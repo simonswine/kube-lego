@@ -6,6 +6,9 @@
         "github.com/cenk/backoff": {
             "branch": "master"
         },
+        "http://github.com/aws/aws-sdk-go": {
+            "branch": "master"
+        },
         "github.com/golang/mock": {
             "branch": "master"
         },
