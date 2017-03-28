@@ -128,6 +128,7 @@ func (kl *KubeLego) TlsProcessHosts(tlsSlice []kubelego.Tls) []error {
 	errs := []error{}
 	for _, tlsElem := range tlsSlice {
 		err := tlsElem.Process()
+		kl.Log().Debugf("tlsElem process error: %v", err)
 		if err != nil {
 			errs = append(errs, err)
 		}

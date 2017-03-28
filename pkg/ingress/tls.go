@@ -3,15 +3,16 @@ package ingress
 import (
 	"time"
 
-	"github.com/jetstack/kube-lego/pkg/kubelego_const"
+	kubelego "github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/secret"
 	"github.com/jetstack/kube-lego/pkg/utils"
 
 	"fmt"
+	"strings"
+
 	"github.com/Sirupsen/logrus"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"strings"
 )
 
 var _ kubelego.Tls = &Tls{}
@@ -128,5 +129,11 @@ func (i *Tls) RequestCert() error {
 
 	s.Object().Data = certData
 
-	return s.Save()
+	i.Log().Debugf("secret object data: %v\n", s)
+
+	returnVal := s.Save()
+
+	i.Log().Debugf("secret save error: %v\n", returnVal)
+
+	return returnVal
 }

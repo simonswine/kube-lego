@@ -13,11 +13,12 @@ import (
 	"net/url"
 	"sync"
 
+	"time"
+
 	"github.com/cenk/backoff"
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"golang.org/x/crypto/acme"
 	"golang.org/x/net/context"
-	"time"
 )
 
 func (a *Acme) ensureAcmeClient() error {
@@ -124,6 +125,8 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 	var wg sync.WaitGroup
 	results := make([]error, len(domains))
 
+	a.Log().Debugf("obtaining certificates for: %v", domains)
+
 	// authorize all domains in parallel
 	for pos, domain := range domains {
 		wg.Add(1)
@@ -150,6 +153,7 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 			} else {
 				log.Infof("authorization successful")
 			}
+			log.Debugf("authorization result: %v", err)
 			results[pos] = err
 
 		}(pos, domain)
@@ -169,6 +173,9 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 			failedDomains = append(failedDomains, domain)
 		}
 	}
+
+	a.Log().Debugf("successfulDomains: %v", successfulDomains)
+	a.Log().Debugf("failedDomains: %v", failedDomains)
 
 	if len(successfulDomains) == 0 {
 		return data, fmt.Errorf("no domain could be authorized successfully")

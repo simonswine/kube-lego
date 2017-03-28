@@ -65,10 +65,11 @@ func (o *Secret) Save() (err error) {
 		obj, err = o.client().Create(o.SecretApi)
 	}
 	if err != nil {
-		return
+		o.Log().Errorf("error creating/updating secret: %v", err.Error())
+		return err
 	}
 	o.SecretApi = obj
-	return
+	return nil
 }
 
 func (o *Secret) Exists() bool {
