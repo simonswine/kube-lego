@@ -76,6 +76,16 @@ func (_mr *_MockKubeLegoRecorder) LegoHTTPPort() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "LegoHTTPPort")
 }
 
+func (_m *MockKubeLego) LegoHealthCheckPath() string {
+	ret := _m.ctrl.Call(_m, "LegoHealthCheckPath")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockKubeLegoRecorder) LegoHealthCheckPath() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "LegoHealthCheckPath")
+}
+
 func (_m *MockKubeLego) LegoEmail() string {
 	ret := _m.ctrl.Call(_m, "LegoEmail")
 	ret0, _ := ret[0].(string)

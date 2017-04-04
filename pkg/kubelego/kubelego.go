@@ -157,6 +157,9 @@ func (kl *KubeLego) LegoEmail() string {
 	return kl.legoEmail
 }
 
+func (kl *KubeLego) LegoHealthCheckPath() string {
+	return kl.legoHealthCheckPath
+}
 func (kl *KubeLego) LegoNamespace() string {
 	return kl.legoNamespace
 }
@@ -340,5 +343,12 @@ func (kl *KubeLego) paramsLego() error {
 	} else {
 		kl.legoWatchNamespace = watchNamespace
 	}
+
+	kl.legoHealthCheckPath = os.Getenv("LEGO_HEALTH_CHECK_PATH")
+	if len(kl.legoHealthCheckPath) == 0 {
+		kl.legoHealthCheckPath = kubelego.LegoHealthCheckPath
+	}
+
+
 	return nil
 }
