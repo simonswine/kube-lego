@@ -34,7 +34,7 @@
 - [deployment](examples/gce/lego/deployment.yaml) for *kube-lego*
   - don't forget to configure
      - `LEGO_EMAIL` with your mail address
-     - `LEGO_POD_IP` with the pod IP address using the downward API
+  - do not omit`LEGO_POD_IP`: Use the downard API and set the pod IP address (see examples)
   - the default value of `LEGO_URL` is the Let's Encrypt **staging environment**. If you want to get "real" certificates you have to configure their production env.
 
 ### how kube-lego works
