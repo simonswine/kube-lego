@@ -74,6 +74,6 @@ func TestAcme_E2E(t *testing.T) {
 	go a.RunServer(stopCh)
 
 	log.Infof("trying to obtain a certificate for the domain")
-	a.ObtainCertificate([]string{domain})
+	a.ObtainCertificate([]string{domain}, "http-01")
 
 }

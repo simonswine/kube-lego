@@ -111,10 +111,16 @@ func (i *Tls) Process() error {
 
 func (i *Tls) RequestCert() error {
 
-	i.Log().Infof("requesting certificate for %s", strings.Join(i.Hosts(), ","))
+	challenge, ok := i.ingress.Object().Annotations[kubelego.AnnotationChallenge]
+	if !ok {
+		challenge = "http-01"
+	}
+
+	i.Log().Infof("requesting certificate for %s with challenge %s", strings.Join(i.Hosts(), ","), challenge)
 
 	certData, err := i.ingress.KubeLego().AcmeClient().ObtainCertificate(
 		i.Hosts(),
+		challenge,
 	)
 	if err != nil {
 		return err

@@ -259,15 +259,15 @@ func (_m *MockAcme) EXPECT() *_MockAcmeRecorder {
 	return _m.recorder
 }
 
-func (_m *MockAcme) ObtainCertificate(domains []string) (map[string][]byte, error) {
-	ret := _m.ctrl.Call(_m, "ObtainCertificate", domains)
+func (_m *MockAcme) ObtainCertificate(domains []string, challenge string) (map[string][]byte, error) {
+	ret := _m.ctrl.Call(_m, "ObtainCertificate", domains, challenge)
 	ret0, _ := ret[0].(map[string][]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockAcmeRecorder) ObtainCertificate(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "ObtainCertificate", arg0)
+func (_mr *_MockAcmeRecorder) ObtainCertificate(arg0 interface{}, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ObtainCertificate", arg0, arg1)
 }
 
 // Mock of Tls interface
