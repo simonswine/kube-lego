@@ -1,0 +1,192 @@
+package acme
+
+import (
+	"fmt"
+	"math/rand"
+	"strings"
+	"time"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/client"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/route53"
+	lego "github.com/xenolf/lego/acme"
+)
+
+const (
+	maxRetries = 5
+	route53TTL = 10
+)
+
+// route53Solver implements the acme.ChallengeSolver interface
+type route53Solver struct {
+	PropagationTimeout time.Duration
+	PropagationInterval time.Duration
+
+	log    *logrus.Entry
+	client *route53.Route53
+}
+
+// customRetryer implements the client.Retryer interface by composing the
+// DefaultRetryer. It controls the logic for retrying recoverable request
+// errors (e.g. when rate limits are exceeded).
+type customRetryer struct {
+	client.DefaultRetryer
+}
+
+// RetryRules overwrites the DefaultRetryer's method.
+// It uses a basic exponential backoff algorithm that returns an initial
+// delay of ~400ms with an upper limit of ~30 seconds which should prevent
+// causing a high number of consecutive throttling errors.
+// For reference: Route 53 enforces an account-wide(!) 5req/s query limit.
+func (d customRetryer) RetryRules(r *request.Request) time.Duration {
+	retryCount := r.RetryCount
+	if retryCount > 7 {
+		retryCount = 7
+	}
+
+	delay := (1 << uint(retryCount)) * (rand.Intn(50) + 200)
+	return time.Duration(delay) * time.Millisecond
+}
+
+// NewChallengeSolver returns a ChallengeSolver configured for the AWS
+// Route 53 service.
+//
+// AWS Credentials are automatically detected in the following locations
+// and prioritized in the following order:
+// 1. Environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+//    AWS_REGION, [AWS_SESSION_TOKEN]
+// 2. Shared credentials file (defaults to ~/.aws/credentials)
+// 3. Amazon EC2 IAM role
+//
+// See also: https://github.com/aws/aws-sdk-go/wiki/configuring-sdk
+func NewChallengeSolver() (*route53Solver, error) {
+	r := customRetryer{}
+	r.NumMaxRetries = maxRetries
+	config := request.WithRetryer(aws.NewConfig(), r)
+	c := route53.New(session.New(config))
+	return &route53Solver{
+		PropagationTimeout: 2 * time.Minute,
+		PropagationInterval: 10 * time.Second,
+		log: logrus.WithField("context", "route53"),
+		client: c,
+	}, nil
+}
+
+// Present creates a TXT record using the specified parameters
+func (r *route53Solver) Present(domain, token, key string) error {
+	l := r.log.WithField("domain", domain)
+	l.Info("updating acme challenge dns record")
+
+	fqdn := fmt.Sprintf("_acme-challenge.%s.", domain)
+	value := fmt.Sprintf(`"%s"`, key)
+	err := r.changeRecord("UPSERT", fqdn, value, route53TTL)
+	if err != nil {
+		return fmt.Errorf("error updating dns records: %s", err)
+	}
+
+	l.Info("waiting for propagation of acme challange dns record")
+	err = lego.WaitFor(r.PropagationTimeout, r.PropagationInterval, func() (bool, error) {
+		return lego.PreCheckDNS(fqdn, key)
+	})
+	return err
+}
+
+// CleanUp removes the TXT record matching the specified parameters
+func (r *route53Solver) CleanUp(domain, token, key string) error {
+	r.log.WithField("domain", domain).Info("removing acme challange dns record")
+
+	fqdn := fmt.Sprintf("_acme-challenge.%s.", domain)
+	value := fmt.Sprintf(`"%s"`, key)
+	return r.changeRecord("DELETE", fqdn, value, route53TTL)
+}
+
+func (r *route53Solver) changeRecord(action, fqdn, value string, ttl int) error {
+	hostedZoneID, err := getHostedZoneID(fqdn, r.client)
+	if err != nil {
+		return fmt.Errorf("Failed to determine Route 53 hosted zone ID: %v", err)
+	}
+
+	recordSet := newTXTRecordSet(fqdn, value, ttl)
+	reqParams := &route53.ChangeResourceRecordSetsInput{
+		HostedZoneId: aws.String(hostedZoneID),
+		ChangeBatch: &route53.ChangeBatch{
+			Comment: aws.String("Managed by Lego"),
+			Changes: []*route53.Change{
+				{
+					Action:            aws.String(action),
+					ResourceRecordSet: recordSet,
+				},
+			},
+		},
+	}
+
+	resp, err := r.client.ChangeResourceRecordSets(reqParams)
+	if err != nil {
+		return fmt.Errorf("Failed to change Route 53 record set: %v", err)
+	}
+
+	statusID := resp.ChangeInfo.Id
+
+	return lego.WaitFor(120*time.Second, 4*time.Second, func() (bool, error) {
+		reqParams := &route53.GetChangeInput{
+			Id: statusID,
+		}
+		resp, err := r.client.GetChange(reqParams)
+		if err != nil {
+			return false, fmt.Errorf("Failed to query Route 53 change status: %v", err)
+		}
+		if *resp.ChangeInfo.Status == route53.ChangeStatusInsync {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+func getHostedZoneID(fqdn string, client *route53.Route53) (string, error) {
+	authZone, err := lego.FindZoneByFqdn(fqdn, lego.RecursiveNameservers)
+	if err != nil {
+		return "", err
+	}
+
+	// .DNSName should not have a trailing dot
+	reqParams := &route53.ListHostedZonesByNameInput{
+		DNSName: aws.String(lego.UnFqdn(authZone)),
+	}
+	resp, err := client.ListHostedZonesByName(reqParams)
+	if err != nil {
+		return "", err
+	}
+
+	var hostedZoneID string
+	for _, hostedZone := range resp.HostedZones {
+		// .Name has a trailing dot
+		if !*hostedZone.Config.PrivateZone && *hostedZone.Name == authZone {
+			hostedZoneID = *hostedZone.Id
+			break
+		}
+	}
+
+	if len(hostedZoneID) == 0 {
+		return "", fmt.Errorf("Zone %s not found in Route 53 for domain %s", authZone, fqdn)
+	}
+
+	if strings.HasPrefix(hostedZoneID, "/hostedzone/") {
+		hostedZoneID = strings.TrimPrefix(hostedZoneID, "/hostedzone/")
+	}
+
+	return hostedZoneID, nil
+}
+
+func newTXTRecordSet(fqdn, value string, ttl int) *route53.ResourceRecordSet {
+	return &route53.ResourceRecordSet{
+		Name: aws.String(fqdn),
+		Type: aws.String("TXT"),
+		TTL:  aws.Int64(int64(ttl)),
+		ResourceRecords: []*route53.ResourceRecord{
+			{Value: aws.String(value)},
+		},
+	}
+}

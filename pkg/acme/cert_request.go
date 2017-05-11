@@ -73,10 +73,23 @@ func (a *Acme) testReachablilty(domain string) error {
 	return nil
 }
 
-func (a *Acme) verifyDomain(domain string) (auth *acme.Authorization, err error) {
-	err = a.testReachablilty(domain)
-	if err != nil {
-		return nil, fmt.Errorf("reachability test failed: %s", err)
+func (a *Acme) verifyDomain(domain string, challengeType string) (auth *acme.Authorization, err error) {
+	log := a.Log().WithField("domain", domain).WithField("challenge", challengeType)
+	var solver ChallengeSolver
+
+	switch challengeType {
+	case "http-01":
+		if err := a.testReachablilty(domain); err != nil {
+			return nil, fmt.Errorf("reachability test failed: %s", err)
+		}
+		solver = a
+	case "dns-01":
+		if a.DNS01Solver == nil {
+			return nil, fmt.Errorf("dns01Solver is not configured, can't solve dns-01 challenge")
+		}
+		solver = a.DNS01Solver
+	default:
+		return nil, fmt.Errorf("challenge type %s is not supported", challengeType)
 	}
 
 	auth, err = a.acmeClient.Authorize(context.Background(), domain)
@@ -86,23 +99,37 @@ func (a *Acme) verifyDomain(domain string) (auth *acme.Authorization, err error)
 
 	var challenge *acme.Challenge
 	for _, ch := range auth.Challenges {
-		if ch.Type == "http-01" {
+		if ch.Type == challengeType {
 			challenge = ch
 			break
 		}
 	}
 
 	if challenge == nil {
-		return nil, fmt.Errorf("no http-01 challenge was offered")
+		return nil, fmt.Errorf("no challenge of type %s was offered", challengeType)
 	}
 
 	token := challenge.Token
-	key, err := a.acmeClient.HTTP01ChallengeResponse(token)
+	var key string
+	if challengeType == "http-01" {
+		key, err = a.acmeClient.HTTP01ChallengeResponse(token)
+	}
+	if challengeType == "dns-01" {
+		key, err = a.acmeClient.DNS01ChallengeRecord(token)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("error generating http-01 response: %s", err)
+		return nil, fmt.Errorf("error generating %s response: %s", challengeType, err)
 	}
 
-	a.Present(domain, token, key)
+	solver.Present(domain, token, key)
+	defer func() {
+		cleanAndLog := func() {
+			if err := solver.CleanUp(domain, token, key); err != nil {
+				log.Infof("error cleaning up: %v", err)
+			}
+		}
+		go cleanAndLog()
+	}()
 
 	challenge, err = a.acmeClient.Accept(context.Background(), challenge)
 	if err != nil {
@@ -133,7 +160,7 @@ func (a *Acme) ObtainCertificate(domains []string, challenge string) (data map[s
 			log := a.Log().WithField("domain", domain)
 
 			op := func() error {
-				auth, err := a.verifyDomain(domain)
+				auth, err := a.verifyDomain(domain, challenge)
 				if err != nil {
 					log.Debugf("error while authorizing: %s", err)
 					return err

@@ -12,10 +12,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	"github.com/jetstack/kube-lego/pkg/mocks"
+	r53 "github.com/jetstack/kube-lego/pkg/acme/route53"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func TestAcme_E2E(t *testing.T) {
+func TestAcmeHTTP01_E2E(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 	log := logrus.WithField("context", "test-mock")
 
@@ -77,3 +78,39 @@ func TestAcme_E2E(t *testing.T) {
 	a.ObtainCertificate([]string{domain}, "http-01")
 
 }
+
+func TestAcmeDNS01_E2E(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
+	log := logrus.WithField("context", "test-mock")
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	// mock kube lego
+	mockKL := mocks.NewMockKubeLego(ctrl)
+	mockKL.EXPECT().Log().AnyTimes().Return(log)
+	mockKL.EXPECT().Version().AnyTimes().Return("mocked-version")
+	mockKL.EXPECT().LegoHTTPPort().AnyTimes().Return(intstr.FromInt(8181))
+	mockKL.EXPECT().AcmeUser().MinTimes(1).Return(nil, errors.New("I am only mocked"))
+	mockKL.EXPECT().LegoURL().MinTimes(1).Return("https://acme-staging.api.letsencrypt.org/directory")
+	mockKL.EXPECT().LegoEmail().MinTimes(1).Return("kube-lego-e2e@example.com")
+	mockKL.EXPECT().SaveAcmeUser(gomock.Any()).MinTimes(1).Return(nil)
+
+	var domain = ""
+	if len(domain) == 0 {
+		t.Skip("no domain configured, choose any you own in AWS")
+	}
+	dns01Solver, err := r53.NewChallengeSolver()
+	if err != nil {
+		t.Skip("could not create route53 adapter: ", err)
+	}
+
+	stopCh := make(chan struct{})
+	a := New(mockKL)
+	a.DNS01Solver = dns01Solver
+	go a.RunServer(stopCh)
+
+	log.Infof("trying to obtain a certificate for the domain %s", domain)
+	a.ObtainCertificate([]string{domain}, "dns-01")
+}
+
+
