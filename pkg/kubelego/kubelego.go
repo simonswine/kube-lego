@@ -18,6 +18,7 @@ import (
 	"github.com/jetstack/kube-lego/pkg/provider/gce"
 	"github.com/jetstack/kube-lego/pkg/provider/nginx"
 	"github.com/jetstack/kube-lego/pkg/secret"
+	r53 "github.com/jetstack/kube-lego/pkg/acme/route53"
 
 	log "github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -90,6 +91,15 @@ func (kl *KubeLego) Init() {
 		kl.Log().Fatal(err)
 	}
 
+	//initialising route53 solver of dns-01 challenges
+	var dns01Solver acme.ChallengeSolver
+	if kl.legoRoute53Enabled {
+		dns01Solver, err = r53.NewChallengeSolver()
+		if err != nil {
+			kl.Log().Fatal(err)
+		}
+	}
+
 	// initialising ingress providers
 	kl.legoIngressProvider = map[string]kubelego.IngressProvider{
 		"gce":   gce.New(kl),
@@ -112,6 +122,7 @@ func (kl *KubeLego) Init() {
 		defer kl.waitGroup.Done()
 		myAcme.RunServer(kl.stopCh)
 	}()
+	myAcme.DNS01Solver = dns01Solver
 	kl.acmeClient = myAcme
 
 	// run ticker to check certificates periodically
@@ -239,6 +250,11 @@ func (kl *KubeLego) paramsLego() error {
 	kl.legoURL = os.Getenv("LEGO_URL")
 	if len(kl.legoURL) == 0 {
 		kl.legoURL = "https://acme-staging.api.letsencrypt.org/directory"
+	}
+
+	route53Enabled := os.Getenv("LEGO_ROUTE53_ENABLED")
+	if route53Enabled == "true" {
+		kl.legoRoute53Enabled = true
 	}
 
 	kl.legoSecretName = os.Getenv("LEGO_SECRET_NAME")
