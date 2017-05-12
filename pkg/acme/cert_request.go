@@ -143,7 +143,12 @@ func (a *Acme) ObtainCertificate(domains []string, challenge string) (data map[s
 			}
 
 			b := backoff.NewExponentialBackOff()
-			b.MaxElapsedTime = time.Duration(time.Second * 60)
+			switch challenge {
+			case "dns-01":
+				b.MaxElapsedTime = time.Duration(time.Minute * 5)
+			default:
+				b.MaxElapsedTime = time.Duration(time.Second * 60)
+			}
 
 			err = backoff.Retry(op, b)
 			if err != nil {
