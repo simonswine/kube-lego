@@ -17,6 +17,7 @@ before_install:
 - rm ngrok.zip
 - export PATH=$(pwd):$PATH
 - export GO15VENDOREXPERIMENT=1
+- ln -s /go/src/frusdelion/kube-lego /go/src/jetstack/kube-lego
 install:
 - make depend
 script:
