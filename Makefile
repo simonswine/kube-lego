@@ -1,4 +1,4 @@
-ACCOUNT=jetstack
+ACCOUNT=frusdelion
 APP_NAME=kube-lego
 
 PACKAGE_NAME=github.com/${ACCOUNT}/${APP_NAME}
@@ -25,7 +25,7 @@ all: test build
 
 codegen:
 	which mockgen
-	mockgen -imports .=github.com/jetstack/kube-lego/pkg/kubelego_const -package=mocks -source=pkg/kubelego_const/interfaces.go > pkg/mocks/mocks.go
+	mockgen -imports .=github.com/$(ACCOUNT)/$(APP_NAME)/pkg/kubelego_const -package=mocks -source=pkg/kubelego_const/interfaces.go > pkg/mocks/mocks.go
 
 depend:
 	rm -rf $(TEST_DIR)/
@@ -73,7 +73,7 @@ docker_%:
 		golang:${GO_VERSION} \
 		/bin/bash -c "tar xf - && make $*" \
 	))
-	
+
 	# run build inside container
 	tar cf - . | docker start -a -i $(CONTAINER_ID)
 
@@ -87,7 +87,7 @@ docker_%:
 
 image: docker_all version
 	docker build --build-arg VCS_REF=$(GIT_COMMIT) -t $(DOCKER_IMAGE):$(BUILD_TAG) .
-	
+
 push: image
 	set -e; \
 	for tag in $(IMAGE_TAGS); do \
@@ -101,4 +101,4 @@ ifndef VERSION
 endif
 	@echo "Preparing release of version $(VERSION)"
 	echo $(VERSION) > VERSION
-	find examples -name '*.yaml' -type f -exec sed -i 's/kube-lego:[0-9\.]*$$/kube-lego:$(VERSION)/g' {} \;
+	find examples -name '*.yaml' -type f -exec sed -i 's/$(APP_NAME):[0-9\.]*$$/$(APP_NAME):$(VERSION)/g' {} \;
