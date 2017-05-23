@@ -11,4 +11,7 @@ before_install:
 install:
 - make depend
 script:
+- docker login -e="${DOCKER_EMAIL}" -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
 - make all
+- make image
+- make push APP_VERSION=${TRAVIS_COMMIT} IMAGE_TAGS="${TRAVIS_TAG} latest"
