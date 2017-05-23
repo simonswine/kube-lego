@@ -1,4 +1,13 @@
+sudo: required
+
+services:
+  - docker
+
 language: go
+
+notifications:
+  email: true
+  
 go:
 - 1.7.5
 - 1.8
