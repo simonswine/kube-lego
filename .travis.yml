@@ -7,10 +7,10 @@ language: go
 
 notifications:
   email: true
-  
+
 go:
-- 1.7.5
 - 1.8
+
 before_install:
 - curl -Ls https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip > ngrok.zip
 - unzip ngrok.zip
@@ -21,6 +21,6 @@ install:
 - make depend
 script:
 - docker login -e="${DOCKER_EMAIL}" -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-- make all
+- make build
 - make image
 - make push APP_VERSION=${TRAVIS_COMMIT} IMAGE_TAGS="${TRAVIS_TAG} latest"
