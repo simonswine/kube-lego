@@ -1,14 +1,28 @@
+sudo: required
+
+services:
+  - docker
+
 language: go
+
+notifications:
+  email: true
+
 go:
-- 1.7.5
 - 1.8
+
 before_install:
 - curl -Ls https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip > ngrok.zip
 - unzip ngrok.zip
 - rm ngrok.zip
 - export PATH=$(pwd):$PATH
 - export GO15VENDOREXPERIMENT=1
+- mkdir -p ${GOPATH}/src/github.com/jetstack/kube-lego
+- ln -s ${GOPATH}/src/github.com/frusdelion/kube-lego ${GOPATH}/src/github.com/jetstack/kube-lego
 install:
 - make depend
 script:
-- make all
+- docker login -e="${DOCKER_EMAIL}" -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+- make build
+- make image
+- make push APP_VERSION=${TRAVIS_COMMIT} IMAGE_TAGS="${TRAVIS_TAG} latest"
