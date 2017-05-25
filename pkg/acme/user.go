@@ -17,6 +17,8 @@ import (
 
 	"golang.org/x/crypto/acme"
 	"golang.org/x/net/context"
+
+	kubelego "github.com/harborfront/kube-lego/pkg/kubelego_const"
 )
 
 func (a *Acme) getContact() []string {
@@ -141,25 +143,28 @@ func (a *Acme) generatePrivateKey() ([]byte, crypto.Signer, error) {
 		return pem.EncodeToMemory(block), privateKey, nil
 	}
 
-	var privateKey *ecdsa.PrivateKey
+	var ecpk *ecdsa.PrivateKey
 	var err error
 
 	switch a.kubelego.LegoKeySize() {
 	case 224:
-		privateKey, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
+		ecpk, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
 		break
 
 	case 256:
-		privateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		ecpk, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		break
 
 	default:
+		ecpk, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+		break
+		
 	case 384:
-		privateKey, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+		ecpk, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		break
 
 	case 521:
-		privateKey, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+		ecpk, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 		break
 
 	}
@@ -168,12 +173,12 @@ func (a *Acme) generatePrivateKey() ([]byte, crypto.Signer, error) {
 		return []byte{}, nil, err
 	}
 
-	b, err := x509.MarshalECPrivateKey(privateKey)
+	b, err := x509.MarshalECPrivateKey(ecpk)
 	if err != nil {
 		return []byte{}, nil, err
 	}
 
 	block := &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
 
-	return pem.EncodeToMemory(block), privateKey, nil
+	return pem.EncodeToMemory(block), ecpk, nil
 }

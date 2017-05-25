@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
+	"github.com/harborfront/kube-lego/pkg/kubelego_const"
 )
 
 var _ kubelego.KubeLego = &KubeLego{}
@@ -354,8 +355,10 @@ func (kl *KubeLego) paramsLego() error {
 	case kubelego.KeyTypeRsa:
 		kl.legoKeyType = kubelego.KeyTypeRsa
 		break
-	default:
 	case kubelego.KeyTypeEcc:
+		kl.legoKeyType = kubelego.KeyTypeEcc
+		break
+	default:
 		kl.legoKeyType = kubelego.KeyTypeEcc
 		break
 	}
