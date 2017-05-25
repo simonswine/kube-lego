@@ -37,6 +37,10 @@ type KubeLego struct {
 	version                   string
 	acmeClient                kubelego.Acme
 
+	// Key Generation
+	legoKeyType string
+	legoKeySize int
+
 	// stop channel for services
 	stopCh chan struct{}
 

@@ -4,7 +4,12 @@ import (
 	k8sApi "k8s.io/client-go/pkg/api/v1"
 )
 
+const KeyTypeRsa = "rsa"
 const RsaKeySize = 2048
+
+const KeyTypeEcc = "ecc"
+const EccKeySize = 384
+
 const AcmeRegistration = "acme-registration.json"
 const AcmeRegistrationUrl = "acme-registration-url"
 const AcmePrivateKey = k8sApi.TLSPrivateKeyKey
