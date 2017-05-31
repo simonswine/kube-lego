@@ -90,12 +90,6 @@ func (kl *KubeLego) Init() {
 		kl.Log().Fatal(err)
 	}
 
-	// initialising ingress providers
-	kl.legoIngressProvider = map[string]kubelego.IngressProvider{
-		"gce":   gce.New(kl),
-		"nginx": nginx.New(kl),
-	}
-
 	// start workers
 	kl.WatchReconfigure()
 
@@ -259,7 +253,7 @@ func (kl *KubeLego) paramsLego() error {
 		kl.legoServiceNameGce = "kube-lego-gce"
 	}
 
-	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"),",")
+	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"), ",")
 	if len(kl.legoSupportedIngressClass) == 1 {
 		kl.legoSupportedIngressClass = kubelego.SupportedIngressClasses
 	}
@@ -280,6 +274,27 @@ func (kl *KubeLego) paramsLego() error {
 		if len(kl.legoIngressNameNginx) == 0 {
 			kl.legoIngressNameNginx = "kube-lego-nginx"
 		}
+	}
+
+	kl.legoIngressProvider = map[string]kubelego.IngressProvider{}
+	ingressProviders := os.Getenv("LEGO_INGRESS_PROVIDERS")
+	if ingressProviders == "" {
+		ingressProviders = "gce,nginx"
+	}
+	for _, providerName := range strings.Split(ingressProviders, ",") {
+		switch providerName {
+		case "gce":
+			kl.Log().Info("Registering ingress provider: gce")
+			kl.legoIngressProvider["gce"] = gce.New(kl)
+		case "nginx":
+			kl.Log().Info("Registering ingress provider: nginx")
+			kl.legoIngressProvider["nginx"] = nginx.New(kl)
+		default:
+			kl.Log().Error("Unsupported ingress provider:", providerName)
+		}
+	}
+	if len(kl.legoIngressProvider) == 0 {
+		return fmt.Errorf("You must set at least one valid ingress provider.")
 	}
 
 	checkIntervalString := os.Getenv("LEGO_CHECK_INTERVAL")
