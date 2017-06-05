@@ -14,7 +14,7 @@ import (
 
 	"github.com/jetstack/kube-lego/pkg/acme"
 	"github.com/jetstack/kube-lego/pkg/ingress"
-	"github.com/jetstack/kube-lego/pkg/kubelego_const"
+	kubelego "github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/provider/gce"
 	"github.com/jetstack/kube-lego/pkg/provider/nginx"
 	"github.com/jetstack/kube-lego/pkg/secret"
@@ -259,9 +259,11 @@ func (kl *KubeLego) paramsLego() error {
 		kl.legoServiceNameGce = "kube-lego-gce"
 	}
 
-	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"),",")
-	if len(kl.legoSupportedIngressClass) == 1 {
+	supportedClasses := os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS")
+	if len(supportedClasses) == 0 {
 		kl.legoSupportedIngressClass = kubelego.SupportedIngressClasses
+	} else {
+		kl.legoSupportedIngressClass = strings.Split(supportedClasses, ",")
 	}
 
 	legoDefaultIngressClass := os.Getenv("LEGO_DEFAULT_INGRESS_CLASS")
