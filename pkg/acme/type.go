@@ -10,6 +10,9 @@ import (
 )
 
 type Acme struct {
+	//solver of dns-01 challenges with Amazon Route 53
+	DNS01Solver           ChallengeSolver
+
 	kubelego.Acme
 
 	log            *logrus.Entry
@@ -26,6 +29,11 @@ type Acme struct {
 	notFound string // string displayed for 404 messages
 	id       string // identification (random string)
 
+}
+
+type ChallengeSolver interface {
+	Present(domain, token, keyAuth string) error
+	CleanUp(domain, token, keyAuth string) error
 }
 
 type acmeAccountRegistration struct {

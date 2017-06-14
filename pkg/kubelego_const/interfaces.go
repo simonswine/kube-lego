@@ -35,7 +35,7 @@ type KubeLego interface {
 }
 
 type Acme interface {
-	ObtainCertificate(domains []string) (map[string][]byte, error)
+	ObtainCertificate(domains []string, challenge string) (map[string][]byte, error)
 }
 
 type Tls interface {

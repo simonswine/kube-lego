@@ -23,3 +23,4 @@ const AnnotationKubeLegoManaged = "kubernetes.io/kube-lego-managed"
 
 var SupportedIngressClasses = []string{"nginx", "gce"}
 var AnnotationEnabled = "kubernetes.io/tls-acme"
+var AnnotationChallenge = "kubernetes.io/challenge-acme"

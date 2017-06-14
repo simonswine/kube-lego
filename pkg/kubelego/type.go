@@ -21,6 +21,7 @@ type KubeLego struct {
 	legoIngressNameNginx      string
 	legoNamespace             string
 	legoPodIP                 net.IP
+	legoRoute53Enabled        bool
 	legoServiceNameNginx      string
 	legoServiceNameGce        string
 	legoSupportedIngressClass []string
