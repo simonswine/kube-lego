@@ -1,17 +1,18 @@
 package ingress
 
 import (
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/secret"
 	"github.com/jetstack/kube-lego/pkg/utils"
 
-	"fmt"
 	"github.com/Sirupsen/logrus"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"strings"
 )
 
 var _ kubelego.Tls = &Tls{}
@@ -110,6 +111,10 @@ func (i *Tls) Process() error {
 }
 
 func (i *Tls) RequestCert() error {
+	// sanity check
+	if i.IngressTLS.SecretName == "" {
+		return errors.New("ingress has an empty SecretName. Must fail")
+	}
 
 	i.Log().Infof("requesting certificate for %s", strings.Join(i.Hosts(), ","))
 
