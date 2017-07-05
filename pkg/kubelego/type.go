@@ -25,6 +25,7 @@ type KubeLego struct {
 	legoServiceNameGce        string
 	legoSupportedIngressClass []string
 	legoHTTPPort              intstr.IntOrString
+	legoHealthCheckPath       string
 	legoCheckInterval         time.Duration
 	legoMinimumValidity       time.Duration
 	legoDefaultIngressClass   string

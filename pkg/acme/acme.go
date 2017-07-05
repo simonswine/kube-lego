@@ -49,7 +49,7 @@ func (a *Acme) Mux() *http.ServeMux {
 		}
 	})
 
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc(a.kubelego.LegoHealthCheckPath(), func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "ok")
