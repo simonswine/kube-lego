@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
+	"github.com/harborfront/kube-lego/pkg/kubelego_const"
 )
 
 var _ kubelego.KubeLego = &KubeLego{}
@@ -214,6 +215,14 @@ func (kl *KubeLego) LegoKubeApiURL() string {
 	return kl.legoKubeApiURL
 }
 
+func (kl *KubeLego) LegoKeyType() string {
+	return kl.legoKeyType
+}
+
+func (kl *KubeLego) LegoKeySize() int {
+	return kl.legoKeySize
+}
+
 func (kl *KubeLego) acmeSecret() *secret.Secret {
 	return secret.New(kl, kl.LegoNamespace(), kl.legoSecretName)
 }
@@ -273,7 +282,7 @@ func (kl *KubeLego) paramsLego() error {
 		kl.legoServiceNameGce = "kube-lego-gce"
 	}
 
-	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"),",")
+	kl.legoSupportedIngressClass = strings.Split(os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS"), ",")
 	if len(kl.legoSupportedIngressClass) == 1 {
 		kl.legoSupportedIngressClass = kubelego.SupportedIngressClasses
 	}
@@ -354,5 +363,46 @@ func (kl *KubeLego) paramsLego() error {
 	} else {
 		kl.legoWatchNamespace = watchNamespace
 	}
+
+	keyType := os.Getenv("LEGO_KEY_TYPE")
+	switch keyType {
+	case kubelego.KeyTypeRsa:
+		kl.legoKeyType = kubelego.KeyTypeRsa
+		break
+	case kubelego.KeyTypeEcc:
+		kl.legoKeyType = kubelego.KeyTypeEcc
+		break
+	default:
+		kl.legoKeyType = kubelego.KeyTypeEcc
+		break
+	}
+
+	keySize := os.Getenv("LEGO_KEY_SIZE")
+	if keyType == kubelego.KeyTypeEcc {
+		switch keySize {
+		case "224":
+		case "256":
+		case "384":
+		case "521":
+			ks, err := strconv.ParseInt(keySize, 10, 0)
+			if err != nil {
+				kl.legoKeySize = kubelego.EccKeySize
+			}
+
+			kl.legoKeySize = int(ks)
+			break
+		default:
+			kl.legoKeySize = kubelego.EccKeySize
+			break
+		}
+	} else if keyType == kubelego.KeyTypeRsa {
+		ks, err := strconv.ParseInt(keySize, 10, 0)
+		if err != nil {
+			kl.legoKeySize = kubelego.RsaKeySize
+		}
+
+		kl.legoKeySize = int(ks)
+	}
+
 	return nil
 }

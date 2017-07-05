@@ -1,6 +1,9 @@
 package acme
 
 import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -14,6 +17,8 @@ import (
 
 	"golang.org/x/crypto/acme"
 	"golang.org/x/net/context"
+
+	kubelego "github.com/harborfront/kube-lego/pkg/kubelego_const"
 )
 
 func (a *Acme) getContact() []string {
@@ -124,15 +129,56 @@ func (a *Acme) validateUser(client *acme.Client, accountURI string) (account *ac
 	return account, nil
 }
 
-func (a *Acme) generatePrivateKey() ([]byte, *rsa.PrivateKey, error) {
+func (a *Acme) generatePrivateKey() ([]byte, crypto.Signer, error) {
 
-	privateKey, err := rsa.GenerateKey(rand.Reader, kubelego.RsaKeySize)
+	if a.kubelego.LegoKeyType() == kubelego.KeyTypeRsa {
+
+		privateKey, err := rsa.GenerateKey(rand.Reader, a.kubelego.LegoKeySize())
+		if err != nil {
+			return []byte{}, nil, err
+		}
+
+		block := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
+
+		return pem.EncodeToMemory(block), privateKey, nil
+	}
+
+	var ecpk *ecdsa.PrivateKey
+	var err error
+
+	switch a.kubelego.LegoKeySize() {
+	case 224:
+		ecpk, err = ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
+		break
+
+	case 256:
+		ecpk, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		break
+
+	default:
+		ecpk, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+		break
+		
+	case 384:
+		ecpk, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+		break
+
+	case 521:
+		ecpk, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+		break
+
+	}
+
 	if err != nil {
 		return []byte{}, nil, err
 	}
 
-	block := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
+	b, err := x509.MarshalECPrivateKey(ecpk)
+	if err != nil {
+		return []byte{}, nil, err
+	}
 
-	return pem.EncodeToMemory(block), privateKey, nil
+	block := &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
 
+	return pem.EncodeToMemory(block), ecpk, nil
 }
