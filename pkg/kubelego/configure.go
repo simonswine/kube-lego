@@ -63,11 +63,14 @@ func (kl *KubeLego) processProvider(ings []kubelego.Ingress) (err error) {
 		}
 
 		for _, ing := range ings {
-			if providerName == ing.IngressClass() {
-				err = provider.Process(ing)
-				if err != nil {
-					provider.Log().Error(err)
-				}
+			if ing.Ignore() {
+				kl.Log().Debug(fmt.Sprintf("Skipping ingress %q with class %q from provider %q", ing.Object().Name, ing.IngressClass(), providerName))
+				continue
+			}
+			kl.Log().Debug(fmt.Sprintf("Processing ingress %q from class %q with provider %q", ing.Object().Name, ing.IngressClass(), providerName))
+			err = provider.Process(ing)
+			if err != nil {
+				provider.Log().Error(err)
 			}
 		}
 
