@@ -113,7 +113,7 @@ func (i *Tls) Process() error {
 func (i *Tls) RequestCert() error {
 	// sanity check
 	if i.IngressTLS.SecretName == "" {
-		return errors.New("ingress has an empty SecretName. Must fail")
+		return errors.New("Ingress has an empty secretName. Skipping certificate retrieval")
 	}
 
 	i.Log().Infof("requesting certificate for %s", strings.Join(i.Hosts(), ","))
