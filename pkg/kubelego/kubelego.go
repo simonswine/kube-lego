@@ -14,16 +14,15 @@ import (
 
 	"github.com/jetstack/kube-lego/pkg/acme"
 	"github.com/jetstack/kube-lego/pkg/ingress"
-	"github.com/jetstack/kube-lego/pkg/kubelego_const"
+	kubelego "github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/provider/gce"
 	"github.com/jetstack/kube-lego/pkg/provider/nginx"
 	"github.com/jetstack/kube-lego/pkg/secret"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
-	"github.com/harborfront/kube-lego/pkg/kubelego_const"
 )
 
 var _ kubelego.KubeLego = &KubeLego{}
@@ -359,35 +358,44 @@ func (kl *KubeLego) paramsLego() error {
 		kl.legoKeyType = kubelego.KeyTypeEcc
 		break
 	default:
-		kl.legoKeyType = kubelego.KeyTypeEcc
+		kl.legoKeyType = kubelego.KeyTypeRsa
 		break
 	}
 
 	keySize := os.Getenv("LEGO_KEY_SIZE")
 	if keyType == kubelego.KeyTypeEcc {
 		switch keySize {
-		case "224":
-		case "256":
-		case "384":
-		case "521":
-			ks, err := strconv.ParseInt(keySize, 10, 0)
-			if err != nil {
-				kl.legoKeySize = kubelego.EccKeySize
-			}
-
-			kl.legoKeySize = int(ks)
-			break
-		default:
+		case "":
+			// Setting default as it is not provided
 			kl.legoKeySize = kubelego.EccKeySize
 			break
+		case "224", "256", "384", "521":
+			ks, err := strconv.Atoi(keySize)
+			if err != nil {
+				return errors.New("Please provide a valid key size for ECC certificates")
+			}
+
+			kl.legoKeySize = ks
+			break
+		default:
+			return errors.New("Please provide a valid key size for ECC certificates")
 		}
 	} else if keyType == kubelego.KeyTypeRsa {
-		ks, err := strconv.ParseInt(keySize, 10, 0)
-		if err != nil {
+		if keySize == "" {
+			// Setting default as it is not provided
 			kl.legoKeySize = kubelego.RsaKeySize
-		}
+		} else {
+			ks, err := strconv.Atoi(keySize)
+			if err != nil {
+				return errors.New("Please provide a valid key size for RSA certificates")
+			}
 
-		kl.legoKeySize = int(ks)
+			if ks < 0 {
+				return errors.New("Please provide a valid key size for RSA certificates")
+			}
+
+			kl.legoKeySize = ks
+		}
 	}
 
 	return nil

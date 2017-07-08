@@ -8,7 +8,7 @@ import (
 	"github.com/jetstack/kube-lego/pkg/utils"
 
 	"fmt"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"strings"

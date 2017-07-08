@@ -115,7 +115,7 @@ Please note:
 | `LEGO_LOG_LEVEL` | n | `info` | Set log level (`debug`, `info`, `warn` or `error`) |
 | `LEGO_KUBE_ANNOTATION` | n | `kubernetes.io/tls-acme` | Set the ingress annotation used by this instance of kube-lego to get certificate for from Let's Encrypt. Allows you to run kube-lego against staging and production LE |
 | `LEGO_WATCH_NAMESPACE` | n | `` | Namespace that kube-lego should watch for ingresses and services |
-| `LEGO_KEY_TYPE` | n | `ecc` | Set your preferred private key type (`ecc`, `rsa`) to generate certificates with. |
+| `LEGO_KEY_TYPE` | n | `rsa` | Set your preferred private key type (`ecc`, `rsa`) to generate certificates with. |
 | `LEGO_KEY_SIZE` | n | `ecc`: `384` <br><br>`rsa`: `2048` |  Set your preferred key size based on the key type selected. <br><br>For `ecc` keys, you may select curves (`224`, `256`, `384`, `521`) , `384` being the default. <br><br>For `rsa` keys, you may provide a reasonable size, `2048` being the default. |
 
 ## Full deployment examples
@@ -149,7 +149,7 @@ Capture 20 seconds of the execution trace:
 
 `$ wget http://localhost:8080/debug/pprof/trace?seconds=20 -O kube-lego.trace`
 
-You can inspect the trace sample by running: 
+You can inspect the trace sample by running:
 
 `$ go tool trace kube-lego.trace`
 

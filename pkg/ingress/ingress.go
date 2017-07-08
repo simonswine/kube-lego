@@ -6,7 +6,7 @@ import (
 
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	k8sMeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sExtensionsTyped "k8s.io/client-go/kubernetes/typed/extensions/v1beta1"

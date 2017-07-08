@@ -17,8 +17,6 @@ import (
 
 	"golang.org/x/crypto/acme"
 	"golang.org/x/net/context"
-
-	kubelego "github.com/harborfront/kube-lego/pkg/kubelego_const"
 )
 
 func (a *Acme) getContact() []string {
@@ -158,7 +156,7 @@ func (a *Acme) generatePrivateKey() ([]byte, crypto.Signer, error) {
 	default:
 		ecpk, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		break
-		
+
 	case 384:
 		ecpk, err = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		break

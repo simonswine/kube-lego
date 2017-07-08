@@ -1,6 +1,6 @@
 {
     "dependencies": {
-        "github.com/Sirupsen/logrus": {
+        "github.com/sirupsen/logrus": {
             "revision": "3f603f494d61c73457fb234161d8982b9f0f0b71"
         },
         "github.com/cenk/backoff": {
