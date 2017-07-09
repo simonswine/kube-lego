@@ -11,7 +11,7 @@ import (
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/utils"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 func New(kubeLego kubelego.KubeLego) *Acme {

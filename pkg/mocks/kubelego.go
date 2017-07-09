@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	k8sApi "k8s.io/client-go/pkg/api/v1"

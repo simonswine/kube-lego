@@ -4,7 +4,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	k8sApi "k8s.io/client-go/pkg/api/v1"

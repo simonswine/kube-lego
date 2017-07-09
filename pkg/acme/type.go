@@ -5,7 +5,7 @@ import (
 
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"golang.org/x/crypto/acme"
 )
 

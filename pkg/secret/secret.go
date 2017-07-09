@@ -8,7 +8,7 @@ import (
 
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	k8sMeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sApiTyped "k8s.io/client-go/kubernetes/typed/core/v1"

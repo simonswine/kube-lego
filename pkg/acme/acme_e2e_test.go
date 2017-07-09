@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	kubelego "github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/mocks"

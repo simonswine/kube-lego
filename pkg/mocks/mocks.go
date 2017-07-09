@@ -4,7 +4,7 @@
 package mocks
 
 import (
-	logrus "github.com/sirupsen/logrus"
+	logrus "github.com/Sirupsen/logrus"
 	gomock "github.com/golang/mock/gomock"
 	. "github.com/jetstack/kube-lego/pkg/kubelego_const"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"

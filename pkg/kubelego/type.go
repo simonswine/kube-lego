@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/jetstack/kube-lego/pkg/ingress"
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 

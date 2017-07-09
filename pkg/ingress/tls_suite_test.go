@@ -7,7 +7,7 @@ import (
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/mocks"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
