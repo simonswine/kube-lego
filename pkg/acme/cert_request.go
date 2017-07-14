@@ -11,15 +11,39 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 
 	"time"
 
 	"github.com/cenk/backoff"
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
+	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/crypto/acme"
 	"golang.org/x/net/context"
 )
+
+var (
+	certReqs = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "cert_reqs_total",
+			Help: "Number of ACME certificate requests",
+		},
+		[]string{"domains"},
+	)
+	certReqErrors = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "cert_errors_total",
+			Help: "Number of ACME certificate request errors",
+		},
+		[]string{"domains"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(certReqs)
+	prometheus.MustRegister(certReqErrors)
+}
 
 func (a *Acme) ensureAcmeClient() error {
 
@@ -193,11 +217,13 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 
 	privateKeyPem, privateKey, err := a.generatePrivateKey()
 	if err != nil {
+		certReqErrors.WithLabelValues(strings.Join(successfulDomains, ", ")).Inc()
 		return data, fmt.Errorf("error generating private key: %s", err)
 	}
 
 	csr, err := x509.CreateCertificateRequest(rand.Reader, &template, privateKey)
 	if err != nil {
+		certReqErrors.WithLabelValues(strings.Join(successfulDomains, ", ")).Inc()
 		return data, fmt.Errorf("error certificate request: %s", err)
 	}
 
@@ -210,6 +236,8 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 	if err != nil {
 		return data, fmt.Errorf("error getting certificate: %s", err)
 	}
+
+	certReqs.WithLabelValues(strings.Join(successfulDomains, ", ")).Inc()
 
 	certBuffer := bytes.NewBuffer([]byte{})
 	for _, cert := range certSlice {

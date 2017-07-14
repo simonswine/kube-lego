@@ -10,6 +10,7 @@ import (
 
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/utils"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -65,6 +66,8 @@ func (a *Acme) Mux() *http.ServeMux {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, a.id)
 	})
+
+	mux.Handle("/metrics", promhttp.Handler())
 
 	// enable pprof in debug mode
 	if logrus.GetLevel() == logrus.DebugLevel {

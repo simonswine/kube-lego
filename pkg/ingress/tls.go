@@ -6,16 +6,28 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/secret"
 	"github.com/jetstack/kube-lego/pkg/utils"
+	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/Sirupsen/logrus"
 	k8sApi "k8s.io/client-go/pkg/api/v1"
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 var _ kubelego.Tls = &Tls{}
+
+var (
+	certRenewalTime = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "cert_days_until_expiry",
+		Help: "Number of days remaining on ACME certificate",
+	}, []string{"domains"})
+)
+
+func init() {
+	prometheus.MustRegister(certRenewalTime)
+}
 
 type Tls struct {
 	*k8sExtensions.IngressTLS
@@ -90,6 +102,7 @@ func (i *Tls) newCertNeeded() bool {
 	minimumValidity := i.ingress.KubeLego().LegoMinimumValidity()
 	timeLeft := expireTime.Sub(time.Now())
 	logger := i.Log().WithField("expire_time", expireTime)
+	certRenewalTime.WithLabelValues(strings.Join(i.Hosts(), ",")).Set(float64(expireTime.Unix()))
 	if timeLeft < minimumValidity {
 		logger.Infof("cert expires soon so renew")
 		return true
