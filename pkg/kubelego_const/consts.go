@@ -23,7 +23,7 @@ const AnnotationSslRedirect = "ingress.kubernetes.io/ssl-redirect"
 const AnnotationKubeLegoManaged = "kubernetes.io/kube-lego-managed"
 const AnnotationWhitelistSourceRange = "ingress.kubernetes.io/whitelist-source-range"
 
-var SupportedIngressClasses = []string{"nginx", "gce"}
-var SupportedIngressProviders = []string{"nginx", "gce"}
+var SupportedIngressClasses = []string{"nginx", "haproxy", "gce"}
+var SupportedIngressProviders = []string{"nginx", "haproxy", "gce"}
 var AnnotationEnabled = "kubernetes.io/tls-acme"
 var LegoServiceSelector = "kube-lego"

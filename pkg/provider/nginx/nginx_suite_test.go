@@ -35,7 +35,7 @@ var _ = Describe("Nginx", func() {
 
 		mockKl = mocks.DummyKubeLego(ctrlMock)
 
-		provider = New(mockKl)
+		provider = New(mockKl, "nginx", "kube-lego-nginx", "kube-lego-nginx")
 	})
 
 	Describe("Process", func() {

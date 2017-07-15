@@ -19,9 +19,11 @@ type KubeLego struct {
 	legoEmail                    string
 	legoSecretName               string
 	legoIngressNameNginx         string
+	legoIngressNameHAProxy       string
 	legoNamespace                string
 	legoPodIP                    net.IP
 	legoServiceNameNginx         string
+	legoServiceNameHAProxy       string
 	legoServiceNameGce           string
 	legoSupportedIngressClass    []string
 	legoSupportedIngressProvider []string

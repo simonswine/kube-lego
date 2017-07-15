@@ -111,7 +111,10 @@ func (kl *KubeLego) Init() {
 			kl.legoIngressProvider["gce"] = gce.New(kl)
 			break
 		case "nginx":
-			kl.legoIngressProvider["nginx"] = nginx.New(kl)
+			kl.legoIngressProvider["nginx"] = nginx.New(kl, "nginx", kl.legoIngressNameNginx, kl.legoServiceNameNginx)
+			break
+		case "haproxy":
+			kl.legoIngressProvider["haproxy"] = nginx.New(kl, "haproxy", kl.legoIngressNameHAProxy, kl.legoServiceNameHAProxy)
 			break
 		default:
 			kl.Log().Warnf("Unsupported provider [%s], please add a handler in kubelego.go#Init()", provider)
@@ -196,19 +199,12 @@ func (kl *KubeLego) LegoDefaultIngressClass() string {
 	return kl.legoDefaultIngressClass
 }
 
-func (kl *KubeLego) LegoIngressNameNginx() string {
-	return kl.legoIngressNameNginx
-}
 func (kl *KubeLego) LegoSupportedIngressClass() []string {
 	return kl.legoSupportedIngressClass
 }
 
 func (kl *KubeLego) LegoSupportedIngressProvider() []string {
 	return kl.legoSupportedIngressProvider
-}
-
-func (kl *KubeLego) LegoServiceNameNginx() string {
-	return kl.legoServiceNameNginx
 }
 
 func (kl *KubeLego) LegoServiceNameGce() string {
@@ -281,6 +277,11 @@ func (kl *KubeLego) paramsLego() error {
 		}
 	}
 
+	kl.legoServiceNameHAProxy = os.Getenv("LEGO_SERVICE_NAME_HAPROXY")
+	if len(kl.legoServiceNameHAProxy) == 0 {
+		kl.legoServiceNameHAProxy = "kube-lego-haproxy"
+	}
+
 	kl.legoServiceNameGce = os.Getenv("LEGO_SERVICE_NAME_GCE")
 	if len(kl.legoServiceNameGce) == 0 {
 		kl.legoServiceNameGce = "kube-lego-gce"
@@ -316,6 +317,11 @@ func (kl *KubeLego) paramsLego() error {
 		if len(kl.legoIngressNameNginx) == 0 {
 			kl.legoIngressNameNginx = "kube-lego-nginx"
 		}
+	}
+
+	kl.legoIngressNameHAProxy = os.Getenv("LEGO_INGRESS_NAME_HAPROXY")
+	if len(kl.legoIngressNameHAProxy) == 0 {
+		kl.legoIngressNameHAProxy = "kube-lego-haproxy"
 	}
 
 	checkIntervalString := os.Getenv("LEGO_CHECK_INTERVAL")
