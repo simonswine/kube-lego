@@ -31,7 +31,7 @@ func New(client kubelego.KubeLego, namespace string, name string) *Secret {
 					Name:      name,
 				},
 			}
-			secret.Log().Info("Attempting to create new secret")
+			secret.Log().Debug("Initialized a new secret")
 			secret.exists = false
 		} else {
 			client.Log().Warn("Error while getting secret: ", err)

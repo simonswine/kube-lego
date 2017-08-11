@@ -52,7 +52,8 @@ func (t *Tls) Secret() kubelego.Secret {
 		return t.secret
 	}
 	meta := t.SecretMetadata()
-	return secret.New(t.ingress.KubeLego(), meta.Namespace, meta.Name)
+	t.secret = secret.New(t.ingress.KubeLego(), meta.Namespace, meta.Name)
+	return t.secret
 }
 
 func (t *Tls) Hosts() []string {
