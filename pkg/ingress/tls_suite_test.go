@@ -11,7 +11,11 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/client-go/kubernetes"
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/rest"
+	"net/http"
+	"net/http/httptest"
 )
 
 func TestTls(t *testing.T) {
@@ -44,6 +48,35 @@ var _ = Describe("Tls", func() {
 		mockSec = mocks.DummySecret(ctrlMock, time.Now(), []string{"das.de.de"})
 
 		tls.ingress = mockIng
+	})
+
+	Describe("Secret", func() {
+		Context("when called for the first time", func() {
+			It("should initialize a new secret object and set it in tls", func() {
+				ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					http.Error(w, "not found", 404)
+				}))
+				defer ts.Close()
+				localConfig := &rest.Config{Host: ts.URL}
+				kubeClient, _ := kubernetes.NewForConfig(localConfig)
+				mockKl.EXPECT().KubeClient().AnyTimes().Return(kubeClient)
+				mockIng.EXPECT().KubeLego().AnyTimes().Return(mockKl)
+
+				secret := tls.Secret()
+
+				Expect(secret).NotTo(BeNil())
+				Expect(tls.secret).NotTo(BeNil())
+				Expect(tls.secret).To(Equal(secret))
+				Expect(secret.Exists()).To(Equal(false))
+			})
+		})
+
+		Context("when a secret object already initialized", func() {
+			It("should return already initialized secret object", func() {
+				tls.secret = mockSec
+				Expect(tls.Secret()).To(Equal(mockSec))
+			})
+		})
 	})
 
 	Describe("newCertNeeded", func() {
