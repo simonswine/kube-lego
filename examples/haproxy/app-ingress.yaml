@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: app
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.class: "haproxy"
+spec:
+  tls:
+  - hosts:
+    - echo.example.com
+    secretName: app-tls
+  rules:
+  - host: echo.example.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: http-svc
+          servicePort: 8080

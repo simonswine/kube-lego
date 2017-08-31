@@ -24,7 +24,7 @@
 ## Requirements
 
 - Kubernetes 1.2+
-- Compatible ingress controller (nginx or GCE see [here](#ingress-controllers))
+- Compatible ingress controller (nginx, HAProxy or GCE see [here](#ingress-controllers))
 - Non-production use case :laughing:
 
 ## Usage
@@ -33,6 +33,7 @@
 
 * [GCE](examples/gce/README.md)
 * [nginx controller](examples/nginx/README.md)
+* [HAProxy controller](/examples/haproxy)
 
 The default value of `LEGO_URL` is the Let's Encrypt **staging environment**. If you want to get "real" certificates you have to configure their production env.
 
@@ -88,6 +89,11 @@ Please note:
 - available through image `gcr.io/google_containers/nginx-ingress-controller`
 - fully supports kube-lego from version 0.8 onwards
 
+### [HAProxy Ingress controller](https://github.com/jcmoraisjr/haproxy-ingress)
+
+- available through image `quay.io/jcmoraisjr/haproxy-ingress`
+- fully supports kube-lego from version 0.3 onwards
+
 ### [GCE Loadbalancers](https://github.com/kubernetes/ingress/tree/master/controllers/gce)
 
 - you don't have to maintain the ingress controller yourself, you pay GCE to do that for you
@@ -105,10 +111,12 @@ Please note:
 | `LEGO_SECRET_NAME` | n | `kube-lego-account` | Name of the secret in the same namespace that contains ACME account secret |
 | `LEGO_SERVICE_SELECTOR` | n | `kube-lego` | Set the service selector to the the kube-lego pod |
 | `LEGO_SERVICE_NAME_NGINX` | n | `kube-lego-nginx` | Service name for NGINX ingress |
+| `LEGO_SERVICE_NAME_HAPROXY` | n | `kube-lego-haproxy` | Service name for HAProxy ingress |
 | `LEGO_SERVICE_NAME_GCE` | n | `kube-lego-gce` | Service name for GCE ingress |
-| `LEGO_SUPPORTED_INGRESS_CLASS` | n | `nginx,gce` | Specify the supported ingress class |
-| `LEGO_SUPPORTED_INGRESS_PROVIDER` | n | `nginx,gce` | Specify the supported ingress provider |
+| `LEGO_SUPPORTED_INGRESS_CLASS` | n | `nginx,haproxy,gce` | Specify the supported ingress class |
+| `LEGO_SUPPORTED_INGRESS_PROVIDER` | n | `nginx,haproxy,gce` | Specify the supported ingress provider |
 | `LEGO_INGRESS_NAME_NGINX` | n | `kube-lego-nginx` | Ingress name which contains the routing for HTTP verification for nginx ingress |
+| `LEGO_INGRESS_NAME_HAPROXY` | n | `kube-lego-haproxy` | Ingress name which contains the routing for HTTP verification for HAProxy ingress |
 | `LEGO_PORT` | n | `8080` | Port where this daemon is listening for verifcation calls (HTTP method)|
 | `LEGO_CHECK_INTERVAL` | n | `8h` | Interval for periodically certificate checks (to find expired certs)|
 | `LEGO_MINIMUM_VALIDITY` | n | `720h` (30 days) | Request a renewal when the remaining certificate validity falls below that value|
@@ -122,6 +130,7 @@ Please note:
 ## Full deployment examples
 
 - [Nginx Ingress Controller](examples/nginx/)
+- [HAProxy Ingress controller](/examples/haproxy)
 - [GCE Load Balancers](examples/gce/)
 
 ## Troubleshooting
