@@ -36,7 +36,8 @@ func (a *Acme) ensureAcmeClient() error {
 
 	account, err := a.validateUser(client, accountURI)
 	if err != nil {
-		a.Log().Fatalf("fatal error verifying existing user: %s", err)
+		a.Log().Errorf("fatal error verifying existing user: %s", err)
+		return err
 	}
 	a.acmeAccount = account
 	a.acmeClient = client
