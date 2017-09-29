@@ -1,0 +1,45 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-lego
+  namespace: kube-lego
+spec:
+  selector:
+    matchLabels:
+      app: kube-lego
+  template:
+    metadata:
+      labels:
+        app: kube-lego
+    spec:
+      containers:
+      - name: kube-lego
+        ## HAProxy support isn't on the stable release yet!
+        image: jetstack/kube-lego:canary
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        ## Use HAProxy Ingress
+        - name: LEGO_DEFAULT_INGRESS_CLASS
+          value: haproxy
+        ## Specify your email address
+        - name: LEGO_EMAIL
+          value: you@example.com
+        ## Uncomment LEGO_URL to use the production API - default is to use staging
+        # - name: LEGO_URL
+        #   value: https://acme-v01.api.letsencrypt.org/directory
+        - name: LEGO_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: LEGO_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 1

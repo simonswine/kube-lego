@@ -14,16 +14,22 @@ import (
 var _ kubelego.IngressProvider = &Nginx{}
 
 type Nginx struct {
-	kubelego kubelego.KubeLego
-	hosts    map[string]bool
-	ingress  kubelego.Ingress
-	service  kubelego.Service
+	kubelego     kubelego.KubeLego
+	hosts        map[string]bool
+	ingress      kubelego.Ingress
+	service      kubelego.Service
+	providerName string
+	ingressName  string
+	serviceName  string
 }
 
-func New(kl kubelego.KubeLego) *Nginx {
+func New(kl kubelego.KubeLego, providerName string, ingressName string, serviceName string) *Nginx {
 	return &Nginx{
-		kubelego: kl,
-		hosts:    map[string]bool{},
+		kubelego:     kl,
+		hosts:        map[string]bool{},
+		providerName: providerName,
+		ingressName:  ingressName,
+		serviceName:  serviceName,
 	}
 }
 
@@ -41,10 +47,10 @@ func (p *Nginx) Finalize() error {
 	p.Log().Debug("finalize")
 
 	if p.ingress == nil {
-		p.ingress = ingress.New(p.kubelego, p.kubelego.LegoNamespace(), p.kubelego.LegoIngressNameNginx())
+		p.ingress = ingress.New(p.kubelego, p.kubelego.LegoNamespace(), p.ingressName)
 	}
 	if p.service == nil {
-		p.service = service.New(p.kubelego, p.kubelego.LegoNamespace(), p.kubelego.LegoServiceNameNginx())
+		p.service = service.New(p.kubelego, p.kubelego.LegoNamespace(), p.serviceName)
 	}
 
 	if len(p.hosts) < 1 {
@@ -100,7 +106,7 @@ func (p *Nginx) updateIngress() error {
 		k8sExtensions.HTTPIngressPath{
 			Path: kubelego.AcmeHttpChallengePath,
 			Backend: k8sExtensions.IngressBackend{
-				ServiceName: p.kubelego.LegoServiceNameNginx(),
+				ServiceName: p.serviceName,
 				ServicePort: p.kubelego.LegoHTTPPort(),
 			},
 		},
@@ -123,7 +129,7 @@ func (p *Nginx) updateIngress() error {
 		// TODO: use the ingres class as specified on the ingress we are
 		// requesting a certificate for
 		kubelego.AnnotationIngressClass:         p.kubelego.LegoDefaultIngressClass(),
-		kubelego.AnnotationIngressProvider:      "nginx",
+		kubelego.AnnotationIngressProvider:      p.providerName,
 		kubelego.AnnotationWhitelistSourceRange: "0.0.0.0/0,::/0",
 	}
 

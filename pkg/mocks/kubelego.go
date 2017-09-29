@@ -20,8 +20,6 @@ func DummyKubeLego(c *gomock.Controller) *MockKubeLego {
 	kl.EXPECT().LegoNamespace().AnyTimes().Return("kube-lego")
 	kl.EXPECT().LegoWatchNamespace().AnyTimes().Return(k8sApi.NamespaceAll)
 	kl.EXPECT().LegoPodIP().AnyTimes().Return(net.ParseIP("1.2.3.4"))
-	kl.EXPECT().LegoIngressNameNginx().AnyTimes().Return("kube-lego-nginx")
-	kl.EXPECT().LegoServiceNameNginx().AnyTimes().Return("kube-lego-nginx")
 	kl.EXPECT().LegoServiceNameGce().AnyTimes().Return("kube-lego-gce")
 	kl.EXPECT().LegoDefaultIngressClass().AnyTimes().Return("nginx")
 	kl.EXPECT().LegoDefaultIngressProvider().AnyTimes().Return("nginx")

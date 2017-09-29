@@ -20,8 +20,6 @@ type KubeLego interface {
 	LegoURL() string
 	LegoNamespace() string
 	LegoWatchNamespace() string
-	LegoIngressNameNginx() string
-	LegoServiceNameNginx() string
 	LegoServiceNameGce() string
 	LegoDefaultIngressClass() string
 	LegoSupportedIngressClass() []string

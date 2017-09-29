@@ -117,26 +117,6 @@ func (_mr *_MockKubeLegoRecorder) LegoWatchNamespace() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "LegoWatchNamespace")
 }
 
-func (_m *MockKubeLego) LegoIngressNameNginx() string {
-	ret := _m.ctrl.Call(_m, "LegoIngressNameNginx")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-func (_mr *_MockKubeLegoRecorder) LegoIngressNameNginx() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "LegoIngressNameNginx")
-}
-
-func (_m *MockKubeLego) LegoServiceNameNginx() string {
-	ret := _m.ctrl.Call(_m, "LegoServiceNameNginx")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-func (_mr *_MockKubeLegoRecorder) LegoServiceNameNginx() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "LegoServiceNameNginx")
-}
-
 func (_m *MockKubeLego) LegoServiceNameGce() string {
 	ret := _m.ctrl.Call(_m, "LegoServiceNameGce")
 	ret0, _ := ret[0].(string)
