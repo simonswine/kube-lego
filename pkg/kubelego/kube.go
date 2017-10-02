@@ -41,5 +41,5 @@ func (kl *KubeLego) InitKube() error {
 }
 
 func (kl *KubeLego) Namespace() string {
-	return kl.legoNamespace
+	return kl.namespace
 }

@@ -78,7 +78,7 @@ func (kl *KubeLego) Stop() {
 }
 
 func (kl *KubeLego) IngressProvider(name string) (provider kubelego.IngressProvider, err error) {
-	provider, ok := kl.legoIngressProvider[name]
+	provider, ok := kl.ingressProvider[name]
 	if !ok {
 		return nil, fmt.Errorf("Ingress provider '%s' not found", name)
 	}
@@ -104,14 +104,14 @@ func (kl *KubeLego) Init() {
 		kl.Log().Fatal(err)
 	}
 
-	kl.legoIngressProvider = map[string]kubelego.IngressProvider{}
-	for _, provider := range kl.legoSupportedIngressProvider {
+	kl.ingressProvider = map[string]kubelego.IngressProvider{}
+	for _, provider := range kl.supportedIngressProvider {
 		switch provider {
 		case "gce":
-			kl.legoIngressProvider["gce"] = gce.New(kl)
+			kl.ingressProvider["gce"] = gce.New(kl)
 			break
 		case "nginx":
-			kl.legoIngressProvider["nginx"] = nginx.New(kl)
+			kl.ingressProvider["nginx"] = nginx.New(kl)
 			break
 		default:
 			kl.Log().Warnf("Unsupported provider [%s], please add a handler in kubelego.go#Init()", provider)
@@ -138,7 +138,7 @@ func (kl *KubeLego) Init() {
 	kl.acmeClient = myAcme
 
 	// run ticker to check certificates periodically
-	ticker := time.NewTicker(kl.legoCheckInterval)
+	ticker := time.NewTicker(kl.checkInterval)
 	go func() {
 		for timestamp := range ticker.C {
 			kl.Log().Infof("Periodically check certificates at %s", timestamp)
@@ -169,72 +169,72 @@ func (kl *KubeLego) Version() string {
 }
 
 func (kl *KubeLego) LegoHTTPPort() intstr.IntOrString {
-	return kl.legoHTTPPort
+	return kl.httpPort
 }
 
 func (kl *KubeLego) LegoURL() string {
-	return kl.legoURL
+	return kl.url
 }
 
 func (kl *KubeLego) LegoEmail() string {
-	return kl.legoEmail
+	return kl.email
 }
 
 func (kl *KubeLego) LegoNamespace() string {
-	return kl.legoNamespace
+	return kl.namespace
 }
 
 func (kl *KubeLego) LegoWatchNamespace() string {
-	return kl.legoWatchNamespace
+	return kl.watchNamespace
 }
 
 func (kl *KubeLego) LegoPodIP() net.IP {
-	return kl.legoPodIP
+	return kl.podIP
 }
 
 func (kl *KubeLego) LegoDefaultIngressClass() string {
-	return kl.legoDefaultIngressClass
+	return kl.defaultIngressClass
 }
 
 func (kl *KubeLego) LegoIngressNameNginx() string {
-	return kl.legoIngressNameNginx
+	return kl.ingressNameNginx
 }
 func (kl *KubeLego) LegoSupportedIngressClass() []string {
-	return kl.legoSupportedIngressClass
+	return kl.supportedIngressClass
 }
 
 func (kl *KubeLego) LegoSupportedIngressProvider() []string {
-	return kl.legoSupportedIngressProvider
+	return kl.supportedIngressProvider
 }
 
 func (kl *KubeLego) LegoServiceNameNginx() string {
-	return kl.legoServiceNameNginx
+	return kl.serviceNameNginx
 }
 
 func (kl *KubeLego) LegoServiceNameGce() string {
-	return kl.legoServiceNameGce
+	return kl.serviceNameGCE
 }
 
 func (kl *KubeLego) LegoMinimumValidity() time.Duration {
-	return kl.legoMinimumValidity
+	return kl.minimumValidity
 }
 
 func (kl *KubeLego) LegoCheckInterval() time.Duration {
-	return kl.legoCheckInterval
+	return kl.checkInterval
 }
 
 func (kl *KubeLego) LegoKubeApiURL() string {
-	return kl.legoKubeApiURL
+	return kl.kubeAPIURL
 }
 
 func (kl *KubeLego) acmeSecret() *secret.Secret {
-	return secret.New(kl, kl.LegoNamespace(), kl.legoSecretName)
+	return secret.New(kl, kl.LegoNamespace(), kl.secretName)
 }
 
 func (kl *KubeLego) AcmeUser() (map[string][]byte, error) {
 	s := kl.acmeSecret()
 	if !s.Exists() {
-		return map[string][]byte{}, fmt.Errorf("no acme user found %s/%s", kl.LegoNamespace(), kl.legoSecretName)
+		return map[string][]byte{}, fmt.Errorf("no acme user found %s/%s", kl.LegoNamespace(), kl.secretName)
 	}
 	return s.SecretApi.Data, nil
 }
@@ -248,79 +248,79 @@ func (kl *KubeLego) SaveAcmeUser(data map[string][]byte) error {
 // read config parameters from ENV vars
 func (kl *KubeLego) paramsLego() error {
 
-	kl.legoEmail = os.Getenv("LEGO_EMAIL")
-	if len(kl.legoEmail) == 0 {
+	kl.email = os.Getenv("LEGO_EMAIL")
+	if len(kl.email) == 0 {
 		return errors.New("Please provide an email address for certificate expiration notifications in LEGO_EMAIL (https://letsencrypt.org/docs/expiration-emails/)")
 	}
 
-	kl.legoPodIP = net.ParseIP(os.Getenv("LEGO_POD_IP"))
-	if kl.legoPodIP == nil {
+	kl.podIP = net.ParseIP(os.Getenv("LEGO_POD_IP"))
+	if kl.podIP == nil {
 		return errors.New("Please provide the pod's IP via environment variable LEGO_POD_IP using the downward API (http://kubernetes.io/docs/user-guide/downward-api/)")
 	}
 
-	kl.legoNamespace = os.Getenv("LEGO_NAMESPACE")
-	if len(kl.legoNamespace) == 0 {
-		kl.legoNamespace = k8sApi.NamespaceDefault
+	kl.namespace = os.Getenv("LEGO_NAMESPACE")
+	if len(kl.namespace) == 0 {
+		kl.namespace = k8sApi.NamespaceDefault
 	}
 
-	kl.legoURL = os.Getenv("LEGO_URL")
-	if len(kl.legoURL) == 0 {
-		kl.legoURL = "https://acme-staging.api.letsencrypt.org/directory"
+	kl.url = os.Getenv("LEGO_URL")
+	if len(kl.url) == 0 {
+		kl.url = "https://acme-staging.api.letsencrypt.org/directory"
 	}
 
-	kl.legoSecretName = os.Getenv("LEGO_SECRET_NAME")
-	if len(kl.legoSecretName) == 0 {
-		kl.legoSecretName = "kube-lego-account"
+	kl.secretName = os.Getenv("LEGO_SECRET_NAME")
+	if len(kl.secretName) == 0 {
+		kl.secretName = "kube-lego-account"
 	}
 
-	kl.legoServiceNameNginx = os.Getenv("LEGO_SERVICE_NAME_NGINX")
-	if len(kl.legoServiceNameNginx) == 0 {
-		kl.legoServiceNameNginx = os.Getenv("LEGO_SERVICE_NAME")
-		if len(kl.legoServiceNameNginx) == 0 {
-			kl.legoServiceNameNginx = "kube-lego-nginx"
+	kl.serviceNameNginx = os.Getenv("LEGO_SERVICE_NAME_NGINX")
+	if len(kl.serviceNameNginx) == 0 {
+		kl.serviceNameNginx = os.Getenv("LEGO_SERVICE_NAME")
+		if len(kl.serviceNameNginx) == 0 {
+			kl.serviceNameNginx = "kube-lego-nginx"
 		}
 	}
 
-	kl.legoServiceNameGce = os.Getenv("LEGO_SERVICE_NAME_GCE")
-	if len(kl.legoServiceNameGce) == 0 {
-		kl.legoServiceNameGce = "kube-lego-gce"
+	kl.serviceNameGCE = os.Getenv("LEGO_SERVICE_NAME_GCE")
+	if len(kl.serviceNameGCE) == 0 {
+		kl.serviceNameGCE = "kube-lego-gce"
 	}
 
 	supportedProviders := os.Getenv("LEGO_SUPPORTED_INGRESS_PROVIDER")
 	if len(supportedProviders) == 0 {
-		kl.legoSupportedIngressProvider = kubelego.SupportedIngressProviders
+		kl.supportedIngressProvider = kubelego.SupportedIngressProviders
 	} else {
-		kl.legoSupportedIngressProvider = strings.Split(supportedProviders, ",")
+		kl.supportedIngressProvider = strings.Split(supportedProviders, ",")
 	}
 
-	legoSupportedIngressClass := os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS")
-	if len(legoSupportedIngressClass) == 0 {
-		kl.legoSupportedIngressClass = kubelego.SupportedIngressClasses
+	supportedIngressClass := os.Getenv("LEGO_SUPPORTED_INGRESS_CLASS")
+	if len(supportedIngressClass) == 0 {
+		kl.supportedIngressClass = kubelego.SupportedIngressClasses
 	} else {
-		kl.legoSupportedIngressClass = strings.Split(legoSupportedIngressClass, ",")
+		kl.supportedIngressClass = strings.Split(supportedIngressClass, ",")
 	}
 
-	legoDefaultIngressClass := os.Getenv("LEGO_DEFAULT_INGRESS_CLASS")
-	if len(legoDefaultIngressClass) == 0 {
-		kl.legoDefaultIngressClass = "nginx"
+	defaultIngressClass := os.Getenv("LEGO_DEFAULT_INGRESS_CLASS")
+	if len(defaultIngressClass) == 0 {
+		kl.defaultIngressClass = "nginx"
 	} else {
 		var err error = nil
-		kl.legoDefaultIngressClass, err = ingress.IsSupportedIngressClass(kl.legoSupportedIngressClass, legoDefaultIngressClass)
+		kl.defaultIngressClass, err = ingress.IsSupportedIngressClass(kl.supportedIngressClass, defaultIngressClass)
 		if err != nil {
-			return fmt.Errorf("Unsupported default ingress class: '%s'. You can set the ingress class with 'LEGO_DEFAULT_INGRESS_CLASS'", legoDefaultIngressClass)
+			return fmt.Errorf("Unsupported default ingress class: '%s'. You can set the ingress class with 'LEGO_DEFAULT_INGRESS_CLASS'", defaultIngressClass)
 		}
 	}
-	kl.legoIngressNameNginx = os.Getenv("LEGO_INGRESS_NAME_NGINX")
-	if len(kl.legoIngressNameNginx) == 0 {
-		kl.legoIngressNameNginx = os.Getenv("LEGO_INGRESS_NAME")
-		if len(kl.legoIngressNameNginx) == 0 {
-			kl.legoIngressNameNginx = "kube-lego-nginx"
+	kl.ingressNameNginx = os.Getenv("LEGO_INGRESS_NAME_NGINX")
+	if len(kl.ingressNameNginx) == 0 {
+		kl.ingressNameNginx = os.Getenv("LEGO_INGRESS_NAME")
+		if len(kl.ingressNameNginx) == 0 {
+			kl.ingressNameNginx = "kube-lego-nginx"
 		}
 	}
 
 	checkIntervalString := os.Getenv("LEGO_CHECK_INTERVAL")
 	if len(checkIntervalString) == 0 {
-		kl.legoCheckInterval = 8 * time.Hour
+		kl.checkInterval = 8 * time.Hour
 	} else {
 		d, err := time.ParseDuration(checkIntervalString)
 		if err != nil {
@@ -329,17 +329,17 @@ func (kl *KubeLego) paramsLego() error {
 		if d < 5*time.Minute {
 			return fmt.Errorf("Minimum check interval is 5 minutes: %s", d)
 		}
-		kl.legoCheckInterval = d
+		kl.checkInterval = d
 	}
 
-	kl.legoKubeApiURL = os.Getenv("LEGO_KUBE_API_URL")
-	if len(kl.legoKubeApiURL) == 0 {
-		kl.legoKubeApiURL = "http://127.0.0.1:8080"
+	kl.kubeAPIURL = os.Getenv("LEGO_KUBE_API_URL")
+	if len(kl.kubeAPIURL) == 0 {
+		kl.kubeAPIURL = "http://127.0.0.1:8080"
 	}
 
 	minimumValidity := os.Getenv("LEGO_MINIMUM_VALIDITY")
 	if len(minimumValidity) == 0 {
-		kl.legoMinimumValidity = time.Hour * 24 * 30
+		kl.minimumValidity = time.Hour * 24 * 30
 	} else {
 		d, err := time.ParseDuration(minimumValidity)
 		if err != nil {
@@ -348,12 +348,12 @@ func (kl *KubeLego) paramsLego() error {
 		if d < 24*time.Hour {
 			return fmt.Errorf("Smallest allowed minimum validity is 24 hours: %s", d)
 		}
-		kl.legoMinimumValidity = d
+		kl.minimumValidity = d
 	}
 
 	httpPortStr := os.Getenv("LEGO_PORT")
 	if len(httpPortStr) == 0 {
-		kl.legoHTTPPort = intstr.FromInt(8080)
+		kl.httpPort = intstr.FromInt(8080)
 	} else {
 		i, err := strconv.Atoi(httpPortStr)
 		if err != nil {
@@ -362,7 +362,7 @@ func (kl *KubeLego) paramsLego() error {
 		if i <= 0 || i >= 65535 {
 			return fmt.Errorf("Wrong port: %d", i)
 		}
-		kl.legoHTTPPort = intstr.FromInt(i)
+		kl.httpPort = intstr.FromInt(i)
 	}
 
 	annotationEnabled := os.Getenv("LEGO_KUBE_ANNOTATION")
@@ -377,9 +377,9 @@ func (kl *KubeLego) paramsLego() error {
 
 	watchNamespace := os.Getenv("LEGO_WATCH_NAMESPACE")
 	if len(watchNamespace) == 0 {
-		kl.legoWatchNamespace = k8sApi.NamespaceAll
+		kl.watchNamespace = k8sApi.NamespaceAll
 	} else {
-		kl.legoWatchNamespace = watchNamespace
+		kl.watchNamespace = watchNamespace
 	}
 	return nil
 }

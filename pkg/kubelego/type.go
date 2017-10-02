@@ -15,29 +15,29 @@ import (
 )
 
 type KubeLego struct {
-	legoURL                      string
-	legoEmail                    string
-	legoSecretName               string
-	legoIngressNameNginx         string
-	legoNamespace                string
-	legoPodIP                    net.IP
-	legoServiceNameNginx         string
-	legoServiceNameGce           string
-	legoSupportedIngressClass    []string
-	legoSupportedIngressProvider []string
-	legoHTTPPort                 intstr.IntOrString
-	legoCheckInterval            time.Duration
-	legoMinimumValidity          time.Duration
-	legoDefaultIngressClass      string
-	legoDefaultIngressProvider   string
-	legoKubeApiURL               string
-	legoWatchNamespace           string
-	kubeClient                   *kubernetes.Clientset
-	legoIngressSlice             []*ingress.Ingress
-	legoIngressProvider          map[string]kubelego.IngressProvider
-	log                          *log.Entry
-	version                      string
-	acmeClient                   kubelego.Acme
+	url                      string
+	email                    string
+	secretName               string
+	ingressNameNginx         string
+	namespace                string
+	podIP                    net.IP
+	serviceNameNginx         string
+	serviceNameGCE           string
+	supportedIngressClass    []string
+	supportedIngressProvider []string
+	httpPort                 intstr.IntOrString
+	checkInterval            time.Duration
+	minimumValidity          time.Duration
+	defaultIngressClass      string
+	defaultIngressProvider   string
+	kubeAPIURL               string
+	watchNamespace           string
+	kubeClient               *kubernetes.Clientset
+	ingressSlice             []*ingress.Ingress
+	ingressProvider          map[string]kubelego.IngressProvider
+	log                      *log.Entry
+	version                  string
+	acmeClient               kubelego.Acme
 
 	// stop channel for services
 	stopCh chan struct{}

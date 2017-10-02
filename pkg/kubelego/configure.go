@@ -55,7 +55,7 @@ func (kl *KubeLego) TlsIgnoreDuplicatedSecrets(tlsSlice []kubelego.Tls) []kubele
 
 func (kl *KubeLego) processProvider(ings []kubelego.Ingress) (err error) {
 
-	for providerName, provider := range kl.legoIngressProvider {
+	for providerName, provider := range kl.ingressProvider {
 		err := provider.Reset()
 		if err != nil {
 			provider.Log().Error(err)
