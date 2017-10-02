@@ -101,8 +101,8 @@ func (kl *KubeLego) WatchEvents() {
 
 	_, controller := cache.NewInformer(
 		&cache.ListWatch{
-			ListFunc:  ingressListFunc(kl.kubeClient, kl.legoWatchNamespace),
-			WatchFunc: ingressWatchFunc(kl.kubeClient, kl.legoWatchNamespace),
+			ListFunc:  ingressListFunc(kl.kubeClient, kl.watchNamespace),
+			WatchFunc: ingressWatchFunc(kl.kubeClient, kl.watchNamespace),
 		},
 		&k8sExtensions.Ingress{},
 		resyncPeriod,
