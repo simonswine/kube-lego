@@ -41,9 +41,11 @@ func (a *Acme) Mux() *http.ServeMux {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		if r.URL.Path == "/" {
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprint(w, "ok")
 		} else {
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprintf(w, a.notFound)
 		}
@@ -59,6 +61,7 @@ func (a *Acme) Mux() *http.ServeMux {
 
 	mux.HandleFunc(kubelego.AcmeHttpSelfTest, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, a.id)
 	})
@@ -76,6 +79,7 @@ func (a *Acme) Mux() *http.ServeMux {
 
 func (a *Acme) handleChallenge(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
 	host := strings.Split(r.Host, ":")[0]
 	basePath := path.Dir(r.URL.EscapedPath())
