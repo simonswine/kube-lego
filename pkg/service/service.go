@@ -58,7 +58,7 @@ func (s *Service) Delete() error {
 	val, ok := s.ServiceApi.Annotations[kubelego.AnnotationKubeLegoManaged]
 	if !ok || val != "true" {
 		return fmt.Errorf(
-			"do not delete service '%s/%s' as it has not %s=true annotation",
+			"do not delete service '%s/%s' as it does not have %s=true annotation",
 			s.ServiceApi.Namespace,
 			s.ServiceApi.Name,
 			kubelego.AnnotationKubeLegoManaged,
@@ -83,7 +83,7 @@ func (s *Service) Save() error {
 		annotationVal, ok := s.ServiceApi.Annotations[kubelego.AnnotationKubeLegoManaged]
 		if !ok || annotationVal != "true" {
 			return fmt.Errorf(
-				"do not update service '%s/%s' as it has not %s=true annotation",
+				"do not update service '%s/%s' as it does not have %s=true annotation",
 				s.ServiceApi.Namespace,
 				s.ServiceApi.Name,
 				kubelego.AnnotationKubeLegoManaged,
