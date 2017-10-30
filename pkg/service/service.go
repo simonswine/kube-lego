@@ -86,7 +86,7 @@ func (s *Service) Save() error {
 				"Not updating service '%s/%s' as it does not have %s=true annotation",
 				s.ServiceApi.Namespace,
 				s.ServiceApi.Name,
-				kubelego.AnnotationKubeLegoManaged
+				kubelego.AnnotationKubeLegoManaged,
 			)
 			return nil
 		}
