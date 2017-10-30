@@ -58,7 +58,7 @@ func (s *Service) Delete() error {
 	val, ok := s.ServiceApi.Annotations[kubelego.AnnotationKubeLegoManaged]
 	if !ok || val != "true" {
 		return fmt.Errorf(
-			"do not delete service '%s/%s' as it has no %s annotation",
+			"do not delete service '%s/%s' as it has not %s=true annotation",
 			s.ServiceApi.Namespace,
 			s.ServiceApi.Name,
 			kubelego.AnnotationKubeLegoManaged,
@@ -80,6 +80,15 @@ func (s *Service) Save() error {
 	var err error
 
 	if s.exists {
+		annotationVal, ok := s.ServiceApi.Annotations[kubelego.AnnotationKubeLegoManaged]
+		if !ok || annotationVal != "true" {
+			return fmt.Errorf(
+				"do not update service '%s/%s' as it has not %s=true annotation",
+				s.ServiceApi.Namespace,
+				s.ServiceApi.Name,
+				kubelego.AnnotationKubeLegoManaged,
+			)
+		}
 		obj, err = s.client().Update(s.ServiceApi)
 	} else {
 		obj, err = s.client().Create(s.ServiceApi)
