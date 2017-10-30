@@ -82,13 +82,11 @@ func (s *Service) Save() error {
 	if s.exists {
 		annotationVal, ok := s.ServiceApi.Annotations[kubelego.AnnotationKubeLegoManaged]
 		if !ok || annotationVal != "true" {
-			s.kubelego.Log().Info(
-				fmt.Errorf(
-					"Not updating service '%s/%s' as it does not have %s=true annotation",
-					s.ServiceApi.Namespace,
-					s.ServiceApi.Name,
-					kubelego.AnnotationKubeLegoManaged,
-				)
+			s.kubelego.Log().Infof(
+				"Not updating service '%s/%s' as it does not have %s=true annotation",
+				s.ServiceApi.Namespace,
+				s.ServiceApi.Name,
+				kubelego.AnnotationKubeLegoManaged
 			)
 			return nil
 		}
