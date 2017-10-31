@@ -231,6 +231,10 @@ func (kl *KubeLego) LegoKubeApiURL() string {
 	return kl.legoKubeApiURL
 }
 
+func (kl *KubeLego) LegoRsaKeySize() int {
+	return kl.legoRsaKeySize
+}
+
 func (kl *KubeLego) acmeSecret() *secret.Secret {
 	return secret.New(kl, kl.LegoNamespace(), kl.legoSecretName)
 }
@@ -404,5 +408,19 @@ func (kl *KubeLego) paramsLego() error {
 	} else {
 		kl.legoWatchNamespace = watchNamespace
 	}
+
+	rsaKeySize := os.Getenv("LEGO_RSA_KEYSIZE")
+	if len(rsaKeySize) == 0 {
+		kl.legoRsaKeySize = kubelego.DefaultRsaKeySize
+	} else {
+		if rsaKeySizeNumeric, err := strconv.Atoi(rsaKeySize); err != nil {
+			return fmt.Errorf("Invalid 'RSA_KEYSIZE': '%s'. Must be a number.", rsaKeySize)
+		} else if rsaKeySizeNumeric < 512 {
+			return fmt.Errorf("Invalid 'RSA_KEYSIZE': '%s'. Must be at least 512.", rsaKeySize)
+		} else {
+			kl.legoRsaKeySize = rsaKeySizeNumeric
+		}
+	}
+
 	return nil
 }

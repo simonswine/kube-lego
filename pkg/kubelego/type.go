@@ -38,6 +38,7 @@ type KubeLego struct {
 	log                          *log.Entry
 	version                      string
 	acmeClient                   kubelego.Acme
+	legoRsaKeySize               int
 
 	// stop channel for services
 	stopCh chan struct{}

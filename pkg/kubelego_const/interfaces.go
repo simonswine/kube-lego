@@ -30,6 +30,7 @@ type KubeLego interface {
 	LegoCheckInterval() time.Duration
 	LegoMinimumValidity() time.Duration
 	LegoPodIP() net.IP
+	LegoRsaKeySize() int
 	IngressProvider(string) (IngressProvider, error)
 	Version() string
 	AcmeUser() (map[string][]byte, error)

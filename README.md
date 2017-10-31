@@ -119,6 +119,7 @@ Please note:
 | `LEGO_LOG_TYPE` | n | `text` | Set log type. Only `json` as custom value supported, everything else defaults to default logrus textFormat |
 | `LEGO_KUBE_ANNOTATION` | n | `kubernetes.io/tls-acme` | Set the ingress annotation used by this instance of kube-lego to get certificate for from Let's Encrypt. Allows you to run kube-lego against staging and production LE |
 | `LEGO_WATCH_NAMESPACE` | n | `` | Namespace that kube-lego should watch for ingresses and services |
+| `LEGO_RSA_KEYSIZE` | n | `2048` | Size of the private RSA key |
 
 ## Full deployment examples
 

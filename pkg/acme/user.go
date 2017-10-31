@@ -126,7 +126,7 @@ func (a *Acme) validateUser(client *acme.Client, accountURI string) (account *ac
 
 func (a *Acme) generatePrivateKey() ([]byte, *rsa.PrivateKey, error) {
 
-	privateKey, err := rsa.GenerateKey(rand.Reader, kubelego.RsaKeySize)
+	privateKey, err := rsa.GenerateKey(rand.Reader, a.kubelego.LegoRsaKeySize())
 	if err != nil {
 		return []byte{}, nil, err
 	}

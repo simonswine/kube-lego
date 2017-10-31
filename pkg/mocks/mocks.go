@@ -217,6 +217,16 @@ func (_mr *_MockKubeLegoRecorder) LegoPodIP() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "LegoPodIP")
 }
 
+func (_m *MockKubeLego) LegoRsaKeySize() int {
+	ret := _m.ctrl.Call(_m, "LegoRsaKeySize")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+func (_mr *_MockKubeLegoRecorder) LegoRsaKeySize() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "LegoRsaKeySize")
+}
+
 func (_m *MockKubeLego) IngressProvider(_param0 string) (IngressProvider, error) {
 	ret := _m.ctrl.Call(_m, "IngressProvider", _param0)
 	ret0, _ := ret[0].(IngressProvider)
