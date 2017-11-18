@@ -118,13 +118,18 @@ func (p *Gce) Process(ingObj kubelego.Ingress) (err error) {
 		}
 
 		// remove existing challenge paths
-		for _, path := range rule.HTTP.Paths {
-			if path.Path == challengePath {
-				continue
+		if rule.HTTP != nil {
+			for _, path := range rule.HTTP.Paths {
+				if path.Path == challengePath {
+					continue
+				}
+				pathsNew = append(pathsNew, path)
 			}
-			pathsNew = append(pathsNew, path)
 		}
 
+		if rule.HTTP == nil {
+			rule.HTTP = &k8sExtensions.HTTPIngressRuleValue{}
+		}
 		// add rule if it contains at least one path
 		if len(pathsNew) > 0 {
 			rule.HTTP.Paths = pathsNew
