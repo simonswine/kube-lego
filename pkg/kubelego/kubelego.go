@@ -188,6 +188,10 @@ func (kl *KubeLego) LegoWatchNamespace() string {
 	return kl.legoWatchNamespace
 }
 
+func (kl *KubeLego) ExponentialBackoffMaxElapsedTime() time.Duration {
+	return kl.exponentialBackoffMaxElapsedTime
+}
+
 func (kl *KubeLego) LegoPodIP() net.IP {
 	return kl.legoPodIP
 }
@@ -420,6 +424,16 @@ func (kl *KubeLego) paramsLego() error {
 		} else {
 			kl.legoRsaKeySize = rsaKeySizeNumeric
 		}
+
+	exponentialBackoffMaxElapsedTime := os.Getenv("LEGO_EXPONENTIAL_BACKOFF_MAX_ELAPSED_TIME")
+	if len(exponentialBackoffMaxElapsedTime) == 0 {
+		kl.exponentialBackoffMaxElapsedTime = time.Second * 60
+	} else {
+		d, err := time.ParseDuration(exponentialBackoffMaxElapsedTime)
+		if err != nil {
+			return err
+		}
+		kl.exponentialBackoffMaxElapsedTime = d
 	}
 
 	return nil

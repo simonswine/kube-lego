@@ -142,7 +142,7 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 			}
 
 			b := backoff.NewExponentialBackOff()
-			b.MaxElapsedTime = time.Duration(time.Second * 60)
+			b.MaxElapsedTime = a.kubelego.ExponentialBackoffMaxElapsedTime()
 
 			err = backoff.Retry(op, b)
 			if err != nil {

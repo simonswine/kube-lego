@@ -29,6 +29,7 @@ type KubeLego interface {
 	LegoSupportedIngressProvider() []string
 	LegoCheckInterval() time.Duration
 	LegoMinimumValidity() time.Duration
+	ExponentialBackoffMaxElapsedTime() time.Duration
 	LegoPodIP() net.IP
 	LegoRsaKeySize() int
 	IngressProvider(string) (IngressProvider, error)
