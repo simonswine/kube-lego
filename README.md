@@ -36,8 +36,6 @@
 
 The default value of `LEGO_URL` is the Let's Encrypt **staging environment**. If you want to get "real" certificates you have to configure their production env.
 
-If you change the `LEGO_URL`, it is required that you delete the existing secret `kube-lego-account` and all certificates you want to request from the new URL.
-
 ### how kube-lego works
 
 As soon as the kube-lego daemon is running, it will create a user account with LetsEncrypt, make a service resource, and look for ingress resources that have this annotation:
@@ -80,6 +78,12 @@ Please note:
 - Setups which utilize 1:1 NAT need to ensure internal resources can reach gateway controlled public addresses.
 - Additionally, your domain must point to your externally available Load Balancer (either directly or via 1:1 NAT)
 
+### Switching from staging to production
+At some point you'll be ready to use LetsEncrypt production API URL. To make the switch in kube-lego, please do the following:
+* Update `LEGO_URL` to `https://acme-v01.api.letsencrypt.org/directory`
+* Delete delete the existing k8s secret `kube-lego-account`
+* Delete other secrets that hold data for certificates you want to replace
+* Restart kube-lego
 
 ## Ingress controllers
 
