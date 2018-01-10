@@ -77,6 +77,9 @@ func (a *Acme) getUser() (client *acme.Client, accountURI string, err error) {
 		return nil, "", fmt.Errorf("could not find acme private key with key '%s'", kubelego.AcmePrivateKey)
 	}
 	block, _ := pem.Decode(privateKeyData)
+	if block == nil {
+		return nil, "", fmt.Errorf("no PEM data is found after decoding privateKeyData")
+	}
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, "", err
