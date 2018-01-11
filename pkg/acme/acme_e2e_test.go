@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"syscall"
 	"testing"
 	"time"
 
@@ -28,7 +29,7 @@ var domain string
 func TestMain(m *testing.M) {
 	logrus.SetLevel(logrus.DebugLevel)
 	setupNgrok()
-	defer cmdNgrok.Process.Kill()
+	defer syscall.Kill(-cmdNgrok.Process.Pid, syscall.SIGKILL)
 	domain = getDomain()
 
 	os.Exit(m.Run())
@@ -56,6 +57,7 @@ func setupMockedKubeLego(t *testing.T) (*mocks.MockKubeLego, *gomock.Controller)
 func setupNgrok() {
 	command := []string{"ngrok", "http", "--bind-tls", "false", "8181"}
 	cmdNgrok = exec.Command(command[0], command[1:]...)
+	cmdNgrok.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	err := cmdNgrok.Start()
 	if err != nil {
 		log.Fatal("failed to start ngrok", err)
