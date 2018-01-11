@@ -1,9 +1,11 @@
 package acme
 
 import (
+	b64 "encoding/base64"
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"regexp"
 	"testing"
@@ -20,9 +22,16 @@ import (
 )
 
 var log = logrus.WithField("context", "test-mock")
+var cmdNgrok *exec.Cmd
+var domain string
 
-func init() {
+func TestMain(m *testing.M) {
 	logrus.SetLevel(logrus.DebugLevel)
+	setupNgrok()
+	defer cmdNgrok.Process.Kill()
+	domain = getDomain()
+
+	os.Exit(m.Run())
 }
 
 func setupMockedKubeLego(t *testing.T) (*mocks.MockKubeLego, *gomock.Controller) {
@@ -44,16 +53,13 @@ func setupMockedKubeLego(t *testing.T) (*mocks.MockKubeLego, *gomock.Controller)
 	return mockKL, ctrl
 }
 
-func setupNgrok(t *testing.T) *exec.Cmd {
+func setupNgrok() {
 	command := []string{"ngrok", "http", "--bind-tls", "false", "8181"}
-	cmdNgrok := exec.Command(command[0], command[1:]...)
+	cmdNgrok = exec.Command(command[0], command[1:]...)
 	err := cmdNgrok.Start()
 	if err != nil {
-		t.Skip("Skipping e2e test as ngrok executable is not available: ", err)
-		return nil
+		log.Fatal("failed to start ngrok", err)
 	}
-
-	return cmdNgrok
 }
 
 func getDomain() string {
@@ -92,16 +98,43 @@ func setupAndStartAcmeServer(t *testing.T, action func(*mocks.MockKubeLego, *Acm
 	mockKL, mockCtrl := setupMockedKubeLego(t)
 	defer mockCtrl.Finish()
 
-	cmdNgrok := setupNgrok(t)
-	defer cmdNgrok.Process.Kill()
-
-	domain := getDomain()
-
 	stopCh := make(chan struct{})
 	a := New(mockKL)
 	go a.RunServer(stopCh)
 
 	action(mockKL, a, domain)
+
+	close(stopCh)
+	time.Sleep(100 * time.Millisecond)
+}
+
+func createUserData(t *testing.T, mockKL *mocks.MockKubeLego, a *Acme) map[string][]byte {
+	mockKL.EXPECT().LegoURL().MinTimes(1).Return("https://acme-staging.api.letsencrypt.org/directory")
+	mockKL.EXPECT().LegoEmail().MinTimes(1).Return("kube-lego-e2e@example.com")
+
+	privateKeyPem, privateKey, err := a.generatePrivateKey()
+	assert.Nil(t, err)
+
+	client := &acme.Client{
+		Key:          privateKey,
+		DirectoryURL: a.kubelego.LegoURL(),
+	}
+
+	account := &acme.Account{
+		Contact: a.getContact(),
+	}
+
+	account, err = client.Register(
+		context.Background(),
+		account,
+		a.acceptTos,
+	)
+	assert.Nil(t, err)
+
+	return map[string][]byte{
+		kubelego.AcmePrivateKey:      privateKeyPem,
+		kubelego.AcmeRegistrationUrl: []byte(account.URI),
+	}
 }
 
 func TestAcme_E2E(t *testing.T) {
@@ -117,34 +150,21 @@ func TestAcme_E2E(t *testing.T) {
 
 func TestAcme_ObtainCertificateWithExistingAcmeUser(t *testing.T) {
 	setupAndStartAcmeServer(t, func(mockKL *mocks.MockKubeLego, a *Acme, domain string) {
-		mockKL.EXPECT().LegoURL().MinTimes(1).Return("https://acme-staging.api.letsencrypt.org/directory")
-		mockKL.EXPECT().LegoEmail().MinTimes(1).Return("kube-lego-e2e@example.com")
-
-		privateKeyPem, privateKey, err := a.generatePrivateKey()
-		assert.Nil(t, err)
-
-		client := &acme.Client{
-			Key:          privateKey,
-			DirectoryURL: a.kubelego.LegoURL(),
-		}
-
-		account := &acme.Account{
-			Contact: a.getContact(),
-		}
-
-		account, err = client.Register(
-			context.Background(),
-			account,
-			a.acceptTos,
-		)
-		assert.Nil(t, err)
-
-		userData := map[string][]byte{
-			kubelego.AcmePrivateKey:      privateKeyPem,
-			kubelego.AcmeRegistrationUrl: []byte(account.URI),
-		}
+		userData := createUserData(t, mockKL, a)
 
 		mockKL.EXPECT().AcmeUser().MinTimes(1).Return(userData, nil)
+
+		a.ObtainCertificate([]string{domain})
+	})
+}
+
+func TestAcme_ObtainCertificateWithIncorrectUserData(t *testing.T) {
+	setupAndStartAcmeServer(t, func(mockKL *mocks.MockKubeLego, a *Acme, domain string) {
+		userData := createUserData(t, mockKL, a)
+		userData[kubelego.AcmePrivateKey] = []byte(b64.StdEncoding.EncodeToString(userData[kubelego.AcmePrivateKey]))
+
+		mockKL.EXPECT().AcmeUser().MinTimes(1).Return(userData, nil)
+		mockKL.EXPECT().SaveAcmeUser(gomock.Any()).MinTimes(1).Return(nil)
 
 		a.ObtainCertificate([]string{domain})
 	})

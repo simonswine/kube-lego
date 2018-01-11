@@ -24,6 +24,7 @@ func (a *Acme) ensureAcmeClient() error {
 	// get existing user or create new one
 	client, accountURI, err := a.getUser()
 	if err != nil {
+		a.Log().Warnf("error while getting existing user: %s. Creating a new one", err)
 		client, account, err := a.createUser()
 		if err != nil {
 			return err
