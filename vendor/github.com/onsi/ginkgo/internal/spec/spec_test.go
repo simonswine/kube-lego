@@ -167,6 +167,29 @@ var _ = Describe("Spec", func() {
 		})
 	})
 
+	Describe("Flaked", func() {
+		It("should work if Run is called twice and gets different results", func() {
+			i := 0
+			spec := New(newItWithBody("flaky it", func() {
+				i++
+				if i == 1 {
+					failer.Fail("oops", codeLocation)
+				}
+			}), containers(), false)
+			spec.Run(buffer)
+			Ω(spec.Passed()).Should(BeFalse())
+			Ω(spec.Failed()).Should(BeTrue())
+			Ω(spec.Flaked()).Should(BeFalse())
+			Ω(spec.Summary("").State).Should(Equal(types.SpecStateFailed))
+			Ω(spec.Summary("").Failure.Message).Should(Equal("oops"))
+			spec.Run(buffer)
+			Ω(spec.Passed()).Should(BeTrue())
+			Ω(spec.Failed()).Should(BeFalse())
+			Ω(spec.Flaked()).Should(BeTrue())
+			Ω(spec.Summary("").State).Should(Equal(types.SpecStatePassed))
+		})
+	})
+
 	Describe("Failed", func() {
 		It("should be failed if the failure was panic", func() {
 			spec := New(newItWithBody("panicky it", func() {
@@ -558,6 +581,7 @@ var _ = Describe("Spec", func() {
 		BeforeEach(func() {
 			spec = New(leafnodes.NewMeasureNode("measure node", func(b Benchmarker) {
 				b.RecordValue("a value", 7, "some info")
+				b.RecordValueWithPrecision("another value", 8, "ns", 5, "more info")
 			}, noneFlag, codeLocation, 4, failer, 0), containers(), false)
 			spec.Run(buffer)
 			Ω(spec.Passed()).Should(BeTrue())
@@ -574,11 +598,18 @@ var _ = Describe("Spec", func() {
 
 		It("should have the measurements report", func() {
 			Ω(summary.Measurements).Should(HaveKey("a value"))
-
 			report := summary.Measurements["a value"]
 			Ω(report.Name).Should(Equal("a value"))
 			Ω(report.Info).Should(Equal("some info"))
 			Ω(report.Results).Should(Equal([]float64{7, 7, 7, 7}))
+
+			Ω(summary.Measurements).Should(HaveKey("another value"))
+			report = summary.Measurements["another value"]
+			Ω(report.Name).Should(Equal("another value"))
+			Ω(report.Info).Should(Equal("more info"))
+			Ω(report.Results).Should(Equal([]float64{8, 8, 8, 8}))
+			Ω(report.Units).Should(Equal("ns"))
+			Ω(report.Precision).Should(Equal(5))
 		})
 	})
 

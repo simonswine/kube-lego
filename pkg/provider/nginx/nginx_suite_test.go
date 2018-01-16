@@ -9,8 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	k8sExtensions "k8s.io/api/extensions/v1beta1"
 	k8sMeta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 func TestNginx(t *testing.T) {

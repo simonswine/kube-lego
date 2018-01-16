@@ -4,9 +4,9 @@ import (
 	. "github.com/jetstack/kube-lego/pkg/kubelego_const"
 
 	"github.com/golang/mock/gomock"
+	k8sExtensions "k8s.io/api/extensions/v1beta1"
 	k8sMeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 func BasicIngressBackend(service string, port int) k8sExtensions.IngressBackend {

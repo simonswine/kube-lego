@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/Sirupsen/logrus"
-	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	k8sExtensions "k8s.io/api/extensions/v1beta1"
 )
 
 var _ kubelego.IngressProvider = &Nginx{}

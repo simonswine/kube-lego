@@ -1,9 +1,16 @@
-## HEAD
+## 1.3.0 3/28/2017
 
 Improvements:
 
+- Significantly improved parallel test distribution.  Now instead of pre-sharding test cases across workers (which can result in idle workers and poor test performance) Ginkgo uses a shared queue to keep all workers busy until all tests are complete.  This improves test-time performance and consistency.
 - `Skip(message)` can be used to skip the current test.
 - Added `extensions/table` - a Ginkgo DSL for [Table Driven Tests](http://onsi.github.io/ginkgo/#table-driven-tests)
+- Add `GinkgoRandomSeed()` - shorthand for `config.GinkgoConfig.RandomSeed`
+- Support for retrying flaky tests with `--flakeAttempts`
+- `ginkgo ./...` now recurses as you'd expect
+- Added `Specify` a synonym for `It`
+- Support colorise on Windows
+- Broader support for various go compilation flags in the `ginkgo` CLI
 
 Bug Fixes:
 
@@ -68,7 +75,7 @@ No changes, just dropping the beta.
 New Features:
 
 - `ginkgo watch` now monitors packages *and their dependencies* for changes.  The depth of the dependency tree can be modified with the `-depth` flag.
-- Test suites with a programmatic focus (`FIt`, `FDescribe`, etc...) exit with non-zero status code, evne when they pass.  This allows CI systems to detect accidental commits of focused test suites.
+- Test suites with a programmatic focus (`FIt`, `FDescribe`, etc...) exit with non-zero status code, even when they pass.  This allows CI systems to detect accidental commits of focused test suites.
 - `ginkgo -p` runs the testsuite in parallel with an auto-detected number of nodes.
 - `ginkgo -tags=TAG_LIST` passes a list of tags down to the `go build` command.
 - `ginkgo --failFast` aborts the test suite after the first failure.

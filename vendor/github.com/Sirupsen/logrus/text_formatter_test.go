@@ -3,9 +3,9 @@ package logrus
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"testing"
 	"time"
-	"strings"
 )
 
 func TestQuoting(t *testing.T) {
@@ -14,7 +14,7 @@ func TestQuoting(t *testing.T) {
 	checkQuoting := func(q bool, value interface{}) {
 		b, _ := tf.Format(WithField("test", value))
 		idx := bytes.Index(b, ([]byte)("test="))
-		cont := bytes.Contains(b[idx+5:], []byte{'"'})
+		cont := bytes.Contains(b[idx+5:], []byte(tf.QuoteCharacter))
 		if cont != q {
 			if q {
 				t.Errorf("quoting expected for: %#v", value)
@@ -24,14 +24,85 @@ func TestQuoting(t *testing.T) {
 		}
 	}
 
+	checkQuoting(false, "")
 	checkQuoting(false, "abcd")
 	checkQuoting(false, "v1.0")
 	checkQuoting(false, "1234567890")
-	checkQuoting(true, "/foobar")
+	checkQuoting(false, "/foobar")
+	checkQuoting(false, "foo_bar")
+	checkQuoting(false, "foo@bar")
+	checkQuoting(false, "foobar^")
+	checkQuoting(false, "+/-_^@f.oobar")
+	checkQuoting(true, "foobar$")
+	checkQuoting(true, "&foobar")
 	checkQuoting(true, "x y")
 	checkQuoting(true, "x,y")
 	checkQuoting(false, errors.New("invalid"))
 	checkQuoting(true, errors.New("invalid argument"))
+
+	// Test for custom quote character.
+	tf.QuoteCharacter = "`"
+	checkQuoting(false, "")
+	checkQuoting(false, "abcd")
+	checkQuoting(false, "/foobar")
+	checkQuoting(false, "foo_bar")
+	checkQuoting(false, "foo@bar")
+	checkQuoting(false, "foobar^")
+	checkQuoting(true, "foobar$")
+	checkQuoting(true, "&foobar")
+	checkQuoting(true, errors.New("invalid argument"))
+
+	// Test for multi-character quotes.
+	tf.QuoteCharacter = "§~±"
+	checkQuoting(false, "abcd")
+	checkQuoting(true, errors.New("invalid argument"))
+
+	// Test for quoting empty fields.
+	tf.QuoteEmptyFields = true
+	checkQuoting(true, "")
+	checkQuoting(false, "abcd")
+	checkQuoting(true, errors.New("invalid argument"))
+}
+
+func TestEscaping_DefaultQuoteCharacter(t *testing.T) {
+	tf := &TextFormatter{DisableColors: true}
+
+	testCases := []struct {
+		value    string
+		expected string
+	}{
+		{`ba"r`, `ba\"r`},
+		{`ba'r`, `ba'r`},
+	}
+
+	for _, tc := range testCases {
+		b, _ := tf.Format(WithField("test", tc.value))
+		if !bytes.Contains(b, []byte(tc.expected)) {
+			t.Errorf("escaping expected for %q (result was %q instead of %q)", tc.value, string(b), tc.expected)
+		}
+	}
+}
+
+func TestEscaping_CustomQuoteCharacter(t *testing.T) {
+	tf := &TextFormatter{DisableColors: true}
+
+	testCases := []struct {
+		value     string
+		expected  string
+		quoteChar string
+	}{
+		{`ba"r`, `ba"r`, `'`},
+		{`ba'r`, `ba\'r`, `'`},
+		{`ba'r`, `ba'r`, `^`},
+	}
+
+	for _, tc := range testCases {
+		tf.QuoteCharacter = tc.quoteChar
+		b, _ := tf.Format(WithField("test", tc.value))
+		if !bytes.Contains(b, []byte(tc.expected)) {
+			t.Errorf("escaping expected for %q (result was %q instead of %q)", tc.value, string(b), tc.expected)
+		}
+	}
 }
 
 func TestTimestampFormat(t *testing.T) {
@@ -40,10 +111,7 @@ func TestTimestampFormat(t *testing.T) {
 		customStr, _ := customFormatter.Format(WithField("test", "test"))
 		timeStart := bytes.Index(customStr, ([]byte)("time="))
 		timeEnd := bytes.Index(customStr, ([]byte)("level="))
-		timeStr := customStr[timeStart+5 : timeEnd-1]
-		if timeStr[0] == '"' && timeStr[len(timeStr)-1] == '"' {
-			timeStr = timeStr[1 : len(timeStr)-1]
-		}
+		timeStr := customStr[timeStart+5+len(customFormatter.QuoteCharacter) : timeEnd-1-len(customFormatter.QuoteCharacter)]
 		if format == "" {
 			format = time.RFC3339
 		}

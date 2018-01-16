@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	k8sApi "k8s.io/api/core/v1"
+	k8sExtensions "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
-	k8sApi "k8s.io/client-go/pkg/api/v1"
-	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 type KubeLego interface {

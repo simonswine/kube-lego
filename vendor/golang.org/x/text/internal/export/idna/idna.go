@@ -39,19 +39,12 @@ import (
 //    error in the future.
 // I think Option 1 is best, but it is quite opinionated.
 
-// ToASCII is a wrapper for Punycode.ToASCII. It converts a domain or domain
-// label to its ASCII form. For example, ToASCII("bücher.example.com") is
-// "xn--bcher-kva.example.com", and ToASCII("golang") is "golang". If an error
-// is encountered it will return an error and a (partially) processed result.
+// ToASCII is a wrapper for Punycode.ToASCII.
 func ToASCII(s string) (string, error) {
 	return Punycode.process(s, true)
 }
 
-// ToUnicode is a wrapper for Punycode.ToUnicode. It converts a domain or domain
-// label to its Unicode form. For example,
-// ToUnicode("xn--bcher-kva.example.com") is "bücher.example.com", and
-// ToUnicode("golang") is "golang". If an error is encountered it will return an
-// error and a (partially) processed result.
+// ToUnicode is a wrapper for Punycode.ToUnicode.
 func ToUnicode(s string) (string, error) {
 	return Punycode.process(s, false)
 }
@@ -59,9 +52,11 @@ func ToUnicode(s string) (string, error) {
 // An Option configures a Profile at creation time.
 type Option func(*options)
 
-// Transitional sets a Profile to use the Transitional mapping as defined
-// in UTS #46. This will cause, for example, "ß" to be mapped to "ss".
-// This option is only useful if combined with MapForLookup.
+// Transitional sets a Profile to use the Transitional mapping as defined in UTS
+// #46. This will cause, for example, "ß" to be mapped to "ss". Using the
+// transitional mapping provides a compromise between IDNA2003 and IDNA2008
+// compatibility. It is used by most browsers when resolving domain names. This
+// option is only meaningful if combined with MapForLookup.
 func Transitional(transitional bool) Option {
 	return func(o *options) { o.transitional = true }
 }
@@ -70,6 +65,15 @@ func Transitional(transitional bool) Option {
 // are longer than allowed by the RFC.
 func VerifyDNSLength(verify bool) Option {
 	return func(o *options) { o.verifyDNSLength = verify }
+}
+
+// RemoveLeadingDots removes leading label separators. Leading runes that map to
+// dots, such as U+3002 IDEOGRAPHIC FULL STOP, are removed as well.
+//
+// This is the behavior suggested by the UTS #46 and is adopted by some
+// browsers.
+func RemoveLeadingDots(remove bool) Option {
+	return func(o *options) { o.removeLeadingDots = remove }
 }
 
 // ValidateLabels sets whether to check the mandatory label validation criteria
@@ -88,13 +92,15 @@ func ValidateLabels(enable bool) Option {
 	}
 }
 
-// UseSTD3Rules sets whether ASCII characters outside the A-Z, a-z, 0-9 and the
-// hyphen should be disallowed. Disallowing these characters is required by
-// IDNA2008 and is the default for ValidateForRegistration and MapForLookup.
-// However, IDNA2003 and UTS #46 allow this to be overridden to support browsers
-// that allow characters outside this range, for example a '_' (U+005F LOW
-// LINE). See http://www.rfc-editor.org/std/std3.txt for more details.
-func UseSTD3Rules(use bool) Option {
+// StrictDomainName limits the set of permissable ASCII characters to those
+// allowed in domain names as defined in RFC 1034 (A-Z, a-z, 0-9 and the
+// hyphen). This is set by default for MapForLookup and ValidateForRegistration.
+//
+// This option is useful, for instance, for browsers that allow characters
+// outside this range, for example a '_' (U+005F LOW LINE). See
+// http://www.rfc-editor.org/std/std3.txt for more details This option
+// corresponds to the UseSTD3ASCIIRules option in UTS #46.
+func StrictDomainName(use bool) Option {
 	return func(o *options) {
 		o.trie = trie
 		o.useSTD3Rules = use
@@ -116,7 +122,7 @@ func BidiRule() Option {
 func ValidateForRegistration() Option {
 	return func(o *options) {
 		o.mapping = validateRegistration
-		UseSTD3Rules(true)(o)
+		StrictDomainName(true)(o)
 		ValidateLabels(true)(o)
 		VerifyDNSLength(true)(o)
 		BidiRule()(o)
@@ -134,16 +140,18 @@ func ValidateForRegistration() Option {
 func MapForLookup() Option {
 	return func(o *options) {
 		o.mapping = validateAndMap
-		UseSTD3Rules(true)(o)
+		StrictDomainName(true)(o)
 		ValidateLabels(true)(o)
+		RemoveLeadingDots(true)(o)
 	}
 }
 
 type options struct {
-	transitional    bool
-	useSTD3Rules    bool
-	validateLabels  bool
-	verifyDNSLength bool
+	transitional      bool
+	useSTD3Rules      bool
+	validateLabels    bool
+	verifyDNSLength   bool
+	removeLeadingDots bool
 
 	trie *idnaTrie
 
@@ -243,21 +251,23 @@ var (
 
 	punycode = &Profile{}
 	lookup   = &Profile{options{
-		transitional:   true,
-		useSTD3Rules:   true,
-		validateLabels: true,
-		trie:           trie,
-		fromPuny:       validateFromPunycode,
-		mapping:        validateAndMap,
-		bidirule:       bidirule.ValidString,
+		transitional:      true,
+		useSTD3Rules:      true,
+		validateLabels:    true,
+		removeLeadingDots: true,
+		trie:              trie,
+		fromPuny:          validateFromPunycode,
+		mapping:           validateAndMap,
+		bidirule:          bidirule.ValidString,
 	}}
 	display = &Profile{options{
-		useSTD3Rules:   true,
-		validateLabels: true,
-		trie:           trie,
-		fromPuny:       validateFromPunycode,
-		mapping:        validateAndMap,
-		bidirule:       bidirule.ValidString,
+		useSTD3Rules:      true,
+		validateLabels:    true,
+		removeLeadingDots: true,
+		trie:              trie,
+		fromPuny:          validateFromPunycode,
+		mapping:           validateAndMap,
+		bidirule:          bidirule.ValidString,
 	}}
 	registration = &Profile{options{
 		useSTD3Rules:    true,
@@ -296,7 +306,9 @@ func (p *Profile) process(s string, toASCII bool) (string, error) {
 		s, err = p.mapping(p, s)
 	}
 	// Remove leading empty labels.
-	for ; len(s) > 0 && s[0] == '.'; s = s[1:] {
+	if p.removeLeadingDots {
+		for ; len(s) > 0 && s[0] == '.'; s = s[1:] {
+		}
 	}
 	// It seems like we should only create this error on ToASCII, but the
 	// UTS 46 conformance tests suggests we should always check this.
@@ -376,23 +388,20 @@ func validateRegistration(p *Profile, s string) (string, error) {
 	if !norm.NFC.IsNormalString(s) {
 		return s, &labelError{s, "V1"}
 	}
-	var err error
 	for i := 0; i < len(s); {
 		v, sz := trie.lookupString(s[i:])
-		i += sz
 		// Copy bytes not copied so far.
 		switch p.simplify(info(v).category()) {
 		// TODO: handle the NV8 defined in the Unicode idna data set to allow
 		// for strict conformance to IDNA2008.
 		case valid, deviation:
 		case disallowed, mapped, unknown, ignored:
-			if err == nil {
-				r, _ := utf8.DecodeRuneInString(s[i:])
-				err = runeError(r)
-			}
+			r, _ := utf8.DecodeRuneInString(s[i:])
+			return s, runeError(r)
 		}
+		i += sz
 	}
-	return s, err
+	return s, nil
 }
 
 func validateAndMap(p *Profile, s string) (string, error) {
@@ -411,7 +420,7 @@ func validateAndMap(p *Profile, s string) (string, error) {
 			continue
 		case disallowed:
 			if err == nil {
-				r, _ := utf8.DecodeRuneInString(s[i:])
+				r, _ := utf8.DecodeRuneInString(s[start:])
 				err = runeError(r)
 			}
 			continue

@@ -26,6 +26,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+GO_VERSION:=$(shell go version)
+
 .PHONY: nuke regenerate tests clean install gofmt vet contributors
 
 all: clean install regenerate install tests errcheck vet
@@ -104,6 +106,9 @@ regenerate:
 	make -C test/stdtypes regenerate
 	make -C test/data regenerate
 	make -C test/typedecl regenerate
+	make -C test/issue260 regenerate
+	make -C test/issue261 regenerate
+	make -C test/issue262 regenerate
 	make -C test/enumdecl regenerate
 	make -C test/typedecl_all regenerate
 	make -C test/enumdecl_all regenerate
@@ -126,8 +131,10 @@ drone:
 	(cd $(GOPATH)/src/github.com/gogo/protobuf && make buildserverall)
 
 testall:
+	go get -u github.com/golang/protobuf/proto
 	make -C protoc-gen-gogo/testdata test
 	make -C vanity/test test
+	make -C test/registration test
 	make tests
 
 bench:
@@ -138,8 +145,10 @@ contributors:
 	git log --format='%aN <%aE>' | sort -fu > CONTRIBUTORS
 
 js:
+ifeq (go1.8, $(findstring go1.8, $(GO_VERSION)))
 	go get github.com/gopherjs/gopherjs
 	gopherjs build github.com/gogo/protobuf/protoc-gen-gogo
+endif
 
 update:
 	(cd protobuf && make update)

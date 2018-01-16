@@ -9,10 +9,10 @@ import (
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 
 	"github.com/Sirupsen/logrus"
+	k8sApi "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	k8sMeta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sApiTyped "k8s.io/client-go/kubernetes/typed/core/v1"
-	k8sApi "k8s.io/client-go/pkg/api/v1"
 )
 
 func New(client kubelego.KubeLego, namespace string, name string) *Secret {

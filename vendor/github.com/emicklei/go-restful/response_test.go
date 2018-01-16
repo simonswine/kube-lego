@@ -95,7 +95,7 @@ func TestStatusCreatedAndContentTypeJson_Issue54(t *testing.T) {
 	resp.WriteHeader(201)
 	resp.WriteAsJson(food{"Juicy"})
 	if httpWriter.HeaderMap.Get("Content-Type") != "application/json" {
-		t.Errorf("Expected content type json but got:%d", httpWriter.HeaderMap.Get("Content-Type"))
+		t.Errorf("Expected content type json but got:%s", httpWriter.HeaderMap.Get("Content-Type"))
 	}
 	if httpWriter.Code != 201 {
 		t.Errorf("Expected status 201 but got:%d", httpWriter.Code)
@@ -194,9 +194,18 @@ func TestWriteHeaderAndEntity_Issue235(t *testing.T) {
 	}
 }
 
-func TestWriteEntityNotAcceptable(t *testing.T) {
+func TestWriteEntityNoAcceptMatchWithProduces(t *testing.T) {
 	httpWriter := httptest.NewRecorder()
 	resp := Response{httpWriter, "application/bogus", []string{"application/json"}, 0, 0, true, nil}
+	resp.WriteEntity("done")
+	if httpWriter.Code != http.StatusOK {
+		t.Errorf("got %d want %d", httpWriter.Code, http.StatusOK)
+	}
+}
+
+func TestWriteEntityNoAcceptMatchNoProduces(t *testing.T) {
+	httpWriter := httptest.NewRecorder()
+	resp := Response{httpWriter, "application/bogus", []string{}, 0, 0, true, nil}
 	resp.WriteEntity("done")
 	if httpWriter.Code != http.StatusNotAcceptable {
 		t.Errorf("got %d want %d", httpWriter.Code, http.StatusNotAcceptable)

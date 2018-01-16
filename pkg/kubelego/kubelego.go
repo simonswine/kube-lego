@@ -20,9 +20,9 @@ import (
 	"github.com/jetstack/kube-lego/pkg/secret"
 
 	log "github.com/Sirupsen/logrus"
+	k8sApi "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
-	k8sApi "k8s.io/client-go/pkg/api/v1"
 )
 
 var _ kubelego.KubeLego = &KubeLego{}

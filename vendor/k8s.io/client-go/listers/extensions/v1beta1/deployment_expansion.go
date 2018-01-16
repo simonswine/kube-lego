@@ -19,9 +19,9 @@ package v1beta1
 import (
 	"fmt"
 
+	extensions "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	extensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 // DeploymentListerExpansion allows custom methods to be added to
@@ -31,10 +31,13 @@ type DeploymentListerExpansion interface {
 }
 
 // DeploymentNamespaceListerExpansion allows custom methods to be added to
-// DeploymentNamespaeLister.
+// DeploymentNamespaceLister.
 type DeploymentNamespaceListerExpansion interface{}
 
-// GetDeploymentsForReplicaSet returns a list of deployments managing a replica set. Returns an error only if no matching deployments are found.
+// GetDeploymentsForReplicaSet returns a list of Deployments that potentially
+// match a ReplicaSet. Only the one specified in the ReplicaSet's ControllerRef
+// will actually manage it.
+// Returns an error only if no matching Deployments are found.
 func (s *deploymentLister) GetDeploymentsForReplicaSet(rs *extensions.ReplicaSet) ([]*extensions.Deployment, error) {
 	if len(rs.Labels) == 0 {
 		return nil, fmt.Errorf("no deployments found for ReplicaSet %v because it has no labels", rs.Name)

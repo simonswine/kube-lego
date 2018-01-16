@@ -6,8 +6,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
+	k8sApi "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	k8sApi "k8s.io/client-go/pkg/api/v1"
 )
 
 func DummyKubeLego(c *gomock.Controller) *MockKubeLego {

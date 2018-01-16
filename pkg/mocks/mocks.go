@@ -10,10 +10,10 @@ import (
 	logrus "github.com/Sirupsen/logrus"
 	gomock "github.com/golang/mock/gomock"
 	. "github.com/jetstack/kube-lego/pkg/kubelego_const"
+	v1 "k8s.io/api/core/v1"
+	v1beta1 "k8s.io/api/extensions/v1beta1"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 	kubernetes "k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/pkg/api/v1"
-	v1beta1 "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 // Mock of KubeLego interface

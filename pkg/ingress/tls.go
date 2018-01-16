@@ -8,10 +8,11 @@ import (
 	"github.com/jetstack/kube-lego/pkg/utils"
 
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	k8sApi "k8s.io/client-go/pkg/api/v1"
-	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"strings"
+
+	"github.com/Sirupsen/logrus"
+	k8sApi "k8s.io/api/core/v1"
+	k8sExtensions "k8s.io/api/extensions/v1beta1"
 )
 
 var _ kubelego.Tls = &Tls{}
