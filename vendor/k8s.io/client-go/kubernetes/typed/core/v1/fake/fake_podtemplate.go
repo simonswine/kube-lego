@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakePodTemplates struct {
 }
 
 var podtemplatesResource = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "podtemplates"}
+
+var podtemplatesKind = schema.GroupVersionKind{Group: "", Version: "v1", Kind: "PodTemplate"}
 
 func (c *FakePodTemplates) Create(podTemplate *v1.PodTemplate) (result *v1.PodTemplate, err error) {
 	obj, err := c.Fake.
@@ -80,7 +82,7 @@ func (c *FakePodTemplates) Get(name string, options meta_v1.GetOptions) (result 
 
 func (c *FakePodTemplates) List(opts meta_v1.ListOptions) (result *v1.PodTemplateList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(podtemplatesResource, c.ns, opts), &v1.PodTemplateList{})
+		Invokes(testing.NewListAction(podtemplatesResource, podtemplatesKind, c.ns, opts), &v1.PodTemplateList{})
 
 	if obj == nil {
 		return nil, err

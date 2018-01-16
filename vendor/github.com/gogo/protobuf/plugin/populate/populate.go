@@ -194,7 +194,6 @@ func (p *plugin) getFuncName(goTypName string) string {
 	case "time.NewPopulatedTime":
 		funcName = p.typesPkg.Use() + ".NewPopulatedStdTime"
 	case "time.NewPopulatedDuration":
-		p.typesPkg.Use()
 		funcName = p.typesPkg.Use() + ".NewPopulatedStdDuration"
 	}
 	return funcName
@@ -668,7 +667,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 			p.P(`func NewPopulated`, ccTypeName, `(r randy`, p.localName, `, easy bool) *`, ccTypeName, ` {`)
 			p.In()
 			p.P(`this := &`, ccTypeName, `{}`)
-			vanity.TurnOffNullableForNativeTypesWithoutDefaultsOnly(f)
+			vanity.TurnOffNullableForNativeTypes(f)
 			p.GenerateField(file, message, f)
 			p.P(`return this`)
 			p.Out()

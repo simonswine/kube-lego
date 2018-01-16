@@ -90,7 +90,6 @@ var (
 	testUseMust        bool
 	testCheckCircRef   bool
 	testJsonIndent     int
-	testMaxInitLen     int
 )
 
 func init() {

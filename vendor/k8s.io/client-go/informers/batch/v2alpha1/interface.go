@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,8 +26,6 @@ import (
 type Interface interface {
 	// CronJobs returns a CronJobInformer.
 	CronJobs() CronJobInformer
-	// Jobs returns a JobInformer.
-	Jobs() JobInformer
 }
 
 type version struct {
@@ -42,9 +40,4 @@ func New(f internalinterfaces.SharedInformerFactory) Interface {
 // CronJobs returns a CronJobInformer.
 func (v *version) CronJobs() CronJobInformer {
 	return &cronJobInformer{factory: v.SharedInformerFactory}
-}
-
-// Jobs returns a JobInformer.
-func (v *version) Jobs() JobInformer {
-	return &jobInformer{factory: v.SharedInformerFactory}
 }

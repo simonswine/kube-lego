@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeDaemonSets struct {
 }
 
 var daemonsetsResource = schema.GroupVersionResource{Group: "extensions", Version: "v1beta1", Resource: "daemonsets"}
+
+var daemonsetsKind = schema.GroupVersionKind{Group: "extensions", Version: "v1beta1", Kind: "DaemonSet"}
 
 func (c *FakeDaemonSets) Create(daemonSet *v1beta1.DaemonSet) (result *v1beta1.DaemonSet, err error) {
 	obj, err := c.Fake.
@@ -90,7 +92,7 @@ func (c *FakeDaemonSets) Get(name string, options v1.GetOptions) (result *v1beta
 
 func (c *FakeDaemonSets) List(opts v1.ListOptions) (result *v1beta1.DaemonSetList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(daemonsetsResource, c.ns, opts), &v1beta1.DaemonSetList{})
+		Invokes(testing.NewListAction(daemonsetsResource, daemonsetsKind, c.ns, opts), &v1beta1.DaemonSetList{})
 
 	if obj == nil {
 		return nil, err

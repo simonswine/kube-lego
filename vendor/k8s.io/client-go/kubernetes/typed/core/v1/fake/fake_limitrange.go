@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeLimitRanges struct {
 }
 
 var limitrangesResource = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "limitranges"}
+
+var limitrangesKind = schema.GroupVersionKind{Group: "", Version: "v1", Kind: "LimitRange"}
 
 func (c *FakeLimitRanges) Create(limitRange *v1.LimitRange) (result *v1.LimitRange, err error) {
 	obj, err := c.Fake.
@@ -80,7 +82,7 @@ func (c *FakeLimitRanges) Get(name string, options meta_v1.GetOptions) (result *
 
 func (c *FakeLimitRanges) List(opts meta_v1.ListOptions) (result *v1.LimitRangeList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(limitrangesResource, c.ns, opts), &v1.LimitRangeList{})
+		Invokes(testing.NewListAction(limitrangesResource, limitrangesKind, c.ns, opts), &v1.LimitRangeList{})
 
 	if obj == nil {
 		return nil, err

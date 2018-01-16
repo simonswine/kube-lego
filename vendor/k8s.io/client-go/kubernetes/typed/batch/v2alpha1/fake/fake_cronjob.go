@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeCronJobs struct {
 }
 
 var cronjobsResource = schema.GroupVersionResource{Group: "batch", Version: "v2alpha1", Resource: "cronjobs"}
+
+var cronjobsKind = schema.GroupVersionKind{Group: "batch", Version: "v2alpha1", Kind: "CronJob"}
 
 func (c *FakeCronJobs) Create(cronJob *v2alpha1.CronJob) (result *v2alpha1.CronJob, err error) {
 	obj, err := c.Fake.
@@ -90,7 +92,7 @@ func (c *FakeCronJobs) Get(name string, options v1.GetOptions) (result *v2alpha1
 
 func (c *FakeCronJobs) List(opts v1.ListOptions) (result *v2alpha1.CronJobList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(cronjobsResource, c.ns, opts), &v2alpha1.CronJobList{})
+		Invokes(testing.NewListAction(cronjobsResource, cronjobsKind, c.ns, opts), &v2alpha1.CronJobList{})
 
 	if obj == nil {
 		return nil, err

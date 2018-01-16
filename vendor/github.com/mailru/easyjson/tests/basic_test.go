@@ -28,6 +28,7 @@ var testCases = []struct {
 	{&optsValue, optsString},
 	{&rawValue, rawString},
 	{&stdMarshalerValue, stdMarshalerString},
+	{&userMarshalerValue, userMarshalerString},
 	{&unexportedStructValue, unexportedStructString},
 	{&excludedFieldValue, excludedFieldString},
 	{&sliceValue, sliceString},
@@ -37,6 +38,15 @@ var testCases = []struct {
 	{&IntsValue, IntsString},
 	{&mapStringStringValue, mapStringStringString},
 	{&namedTypeValue, namedTypeValueString},
+	{&mapMyIntStringValue, mapMyIntStringValueString},
+	{&mapIntStringValue, mapIntStringValueString},
+	{&mapInt32StringValue, mapInt32StringValueString},
+	{&mapInt64StringValue, mapInt64StringValueString},
+	{&mapUintStringValue, mapUintStringValueString},
+	{&mapUint32StringValue, mapUint32StringValueString},
+	{&mapUint64StringValue, mapUint64StringValueString},
+	{&mapUintptrStringValue, mapUintptrStringValueString},
+	{&intKeyedMapStructValue, intKeyedMapStructValueString},
 }
 
 func TestMarshal(t *testing.T) {

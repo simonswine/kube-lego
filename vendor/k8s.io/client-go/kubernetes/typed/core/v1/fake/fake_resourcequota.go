@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeResourceQuotas struct {
 }
 
 var resourcequotasResource = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "resourcequotas"}
+
+var resourcequotasKind = schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ResourceQuota"}
 
 func (c *FakeResourceQuotas) Create(resourceQuota *v1.ResourceQuota) (result *v1.ResourceQuota, err error) {
 	obj, err := c.Fake.
@@ -90,7 +92,7 @@ func (c *FakeResourceQuotas) Get(name string, options meta_v1.GetOptions) (resul
 
 func (c *FakeResourceQuotas) List(opts meta_v1.ListOptions) (result *v1.ResourceQuotaList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(resourcequotasResource, c.ns, opts), &v1.ResourceQuotaList{})
+		Invokes(testing.NewListAction(resourcequotasResource, resourcequotasKind, c.ns, opts), &v1.ResourceQuotaList{})
 
 	if obj == nil {
 		return nil, err

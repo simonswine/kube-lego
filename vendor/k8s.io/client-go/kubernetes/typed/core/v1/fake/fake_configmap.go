@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeConfigMaps struct {
 }
 
 var configmapsResource = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "configmaps"}
+
+var configmapsKind = schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ConfigMap"}
 
 func (c *FakeConfigMaps) Create(configMap *v1.ConfigMap) (result *v1.ConfigMap, err error) {
 	obj, err := c.Fake.
@@ -80,7 +82,7 @@ func (c *FakeConfigMaps) Get(name string, options meta_v1.GetOptions) (result *v
 
 func (c *FakeConfigMaps) List(opts meta_v1.ListOptions) (result *v1.ConfigMapList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(configmapsResource, c.ns, opts), &v1.ConfigMapList{})
+		Invokes(testing.NewListAction(configmapsResource, configmapsKind, c.ns, opts), &v1.ConfigMapList{})
 
 	if obj == nil {
 		return nil, err

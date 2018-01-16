@@ -50,6 +50,10 @@ By default, when running multiple tests (with -r or a list of packages) Ginkgo w
 
 	ginkgo -keepGoing
 
+To fail if there are ginkgo tests in a directory but no test suite (missing `RunSpecs`)
+
+	ginkgo -requireSuite
+
 To monitor packages and rerun tests when changes occur:
 
 	ginkgo watch <-r> </path/to/package>
@@ -234,7 +238,7 @@ func complainAndQuit(complaint string) {
 	os.Exit(1)
 }
 
-func findSuites(args []string, recurse bool, skipPackage string, allowPrecompiled bool) ([]testsuite.TestSuite, []string) {
+func findSuites(args []string, recurseForAll bool, skipPackage string, allowPrecompiled bool) ([]testsuite.TestSuite, []string) {
 	suites := []testsuite.TestSuite{}
 
 	if len(args) > 0 {
@@ -246,10 +250,15 @@ func findSuites(args []string, recurse bool, skipPackage string, allowPrecompile
 					continue
 				}
 			}
-			suites = append(suites, testsuite.SuitesInDir(arg, recurse)...)
+			recurseForSuite := recurseForAll
+			if strings.HasSuffix(arg, "/...") && arg != "/..." {
+				arg = arg[:len(arg)-4]
+				recurseForSuite = true
+			}
+			suites = append(suites, testsuite.SuitesInDir(arg, recurseForSuite)...)
 		}
 	} else {
-		suites = testsuite.SuitesInDir(".", recurse)
+		suites = testsuite.SuitesInDir(".", recurseForAll)
 	}
 
 	skippedPackages := []string{}

@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ type FakeThirdPartyResources struct {
 }
 
 var thirdpartyresourcesResource = schema.GroupVersionResource{Group: "extensions", Version: "v1beta1", Resource: "thirdpartyresources"}
+
+var thirdpartyresourcesKind = schema.GroupVersionKind{Group: "extensions", Version: "v1beta1", Kind: "ThirdPartyResource"}
 
 func (c *FakeThirdPartyResources) Create(thirdPartyResource *v1beta1.ThirdPartyResource) (result *v1beta1.ThirdPartyResource, err error) {
 	obj, err := c.Fake.
@@ -75,7 +77,7 @@ func (c *FakeThirdPartyResources) Get(name string, options v1.GetOptions) (resul
 
 func (c *FakeThirdPartyResources) List(opts v1.ListOptions) (result *v1beta1.ThirdPartyResourceList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(thirdpartyresourcesResource, opts), &v1beta1.ThirdPartyResourceList{})
+		Invokes(testing.NewRootListAction(thirdpartyresourcesResource, thirdpartyresourcesKind, opts), &v1beta1.ThirdPartyResourceList{})
 	if obj == nil {
 		return nil, err
 	}

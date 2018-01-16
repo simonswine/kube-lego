@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ type FakeNodes struct {
 }
 
 var nodesResource = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "nodes"}
+
+var nodesKind = schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Node"}
 
 func (c *FakeNodes) Create(node *v1.Node) (result *v1.Node, err error) {
 	obj, err := c.Fake.
@@ -84,7 +86,7 @@ func (c *FakeNodes) Get(name string, options meta_v1.GetOptions) (result *v1.Nod
 
 func (c *FakeNodes) List(opts meta_v1.ListOptions) (result *v1.NodeList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(nodesResource, opts), &v1.NodeList{})
+		Invokes(testing.NewRootListAction(nodesResource, nodesKind, opts), &v1.NodeList{})
 	if obj == nil {
 		return nil, err
 	}

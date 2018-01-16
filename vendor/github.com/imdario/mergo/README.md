@@ -65,17 +65,29 @@ If you were using Mergo **before** April 6th 2015, please check your project wor
 
 You can only merge same-type structs with exported fields initialized as zero value of their type and same-types maps. Mergo won't merge unexported (private) fields but will do recursively any exported one. Also maps will be merged recursively except for structs inside maps (because they are not addressable using Go reflection).
 
-    if err := mergo.Merge(&dst, src); err != nil {
-        // ...
-    }
+```go
+if err := mergo.Merge(&dst, src); err != nil {
+    // ...
+}
+```
+
+Also, you can merge overwriting values using the transformer WithOverride.
+
+```go
+if err := mergo.Merge(&dst, src, WithOverride); err != nil {
+    // ...
+}
+```
 
 Additionally, you can map a map[string]interface{} to a struct (and otherwise, from struct to map), following the same restrictions as in Merge(). Keys are capitalized to find each corresponding exported field.
 
-    if err := mergo.Map(&dst, srcMap); err != nil {
-        // ...
-    }
+```go
+if err := mergo.Map(&dst, srcMap); err != nil {
+    // ...
+}
+```
 
-Warning: if you map a struct to map, it won't do it recursively. Don't expect Mergo to map struct members of your struct as map[string]interface{}. They will be just assigned as values.
+Warning: if you map a struct to map, it won't do it recursively. Don't expect Mergo to map struct members of your struct as `map[string]interface{}`. They will be just assigned as values.
 
 More information and examples in [godoc documentation](http://godoc.org/github.com/imdario/mergo).
 
@@ -97,15 +109,12 @@ type Foo struct {
 func main() {
 	src := Foo{
 		A: "one",
-	}
-
-	dest := Foo{
-		A: "two",
 		B: 2,
 	}
-
+	dest := Foo{
+		A: "two",
+	}
 	mergo.Merge(&dest, src)
-
 	fmt.Println(dest)
 	// Will print
 	// {two 2}
@@ -114,7 +123,54 @@ func main() {
 
 Note: if test are failing due missing package, please execute:
 
-    go get gopkg.in/yaml.v1
+    go get gopkg.in/yaml.v2
+
+### Transformers
+
+Transformers allow to merge specific types differently than in the default behavior. In other words, now you can customize how some types are merged. For example, `time.Time` is a struct; it doesn't have zero value but IsZero can return true because it has fields with zero value. How can we merge a non-zero `time.Time`?
+
+```go
+package main
+
+import (
+	"fmt"
+        "reflect"
+        "time"
+)
+
+type timeTransfomer struct {
+}
+
+func (t timeTransfomer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	if typ == reflect.TypeOf(time.Time{}) {
+		return func(dst, src reflect.Value) error {
+			if dst.CanSet() {
+				isZero := dst.MethodByName("IsZero")
+				result := isZero.Call([]reflect.Value{})
+				if result[0].Bool() {
+					dst.Set(src)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+type Snapshot struct {
+	Time time.Time
+	// ...
+}
+
+func main() {
+	src := Snapshot{time.Now()}
+	dest := Snapshot{}
+	mergo.Merge(&dest, src, WithTransformers(timeTransfomer{}))
+	fmt.Println(dest)
+	// Will print
+	// { 2018-01-12 01:15:00 +0000 UTC m=+0.000000001 }
+}
+```
+
 
 ## Contact me
 

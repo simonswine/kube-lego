@@ -4,11 +4,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"time"
+
 	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/ginkgo/internal/remote"
 	st "github.com/onsi/ginkgo/reporters/stenographer"
 	"github.com/onsi/ginkgo/types"
-	"time"
 )
 
 var _ = Describe("Aggregator", func() {
@@ -135,7 +136,7 @@ var _ = Describe("Aggregator", func() {
 			It("should announce the beginning of the suite", func() {
 				Ω(stenographer.Calls()).Should(HaveLen(3))
 				Ω(stenographer.Calls()[0]).Should(Equal(call("AnnounceSuite", suiteDescription, ginkgoConfig1.RandomSeed, true, false)))
-				Ω(stenographer.Calls()[1]).Should(Equal(call("AnnounceNumberOfSpecs", 23, 30, false)))
+				Ω(stenographer.Calls()[1]).Should(Equal(call("AnnounceTotalNumberOfSpecs", 30, false)))
 				Ω(stenographer.Calls()[2]).Should(Equal(call("AnnounceAggregatedParallelRun", 2, false)))
 			})
 		})
@@ -235,9 +236,11 @@ var _ = Describe("Aggregator", func() {
 				suiteSummary1.SuiteSucceeded = true
 				suiteSummary1.NumberOfPassedSpecs = 15
 				suiteSummary1.NumberOfFailedSpecs = 0
+				suiteSummary1.NumberOfFlakedSpecs = 3
 				suiteSummary2.SuiteSucceeded = false
 				suiteSummary2.NumberOfPassedSpecs = 5
 				suiteSummary2.NumberOfFailedSpecs = 3
+				suiteSummary2.NumberOfFlakedSpecs = 4
 
 				aggregator.SpecSuiteDidEnd(suiteSummary2)
 				aggregator.SpecSuiteDidEnd(suiteSummary1)
@@ -256,6 +259,7 @@ var _ = Describe("Aggregator", func() {
 				Ω(compositeSummary.NumberOfFailedSpecs).Should(Equal(3))
 				Ω(compositeSummary.NumberOfPendingSpecs).Should(Equal(3))
 				Ω(compositeSummary.NumberOfSkippedSpecs).Should(Equal(4))
+				Ω(compositeSummary.NumberOfFlakedSpecs).Should(Equal(7))
 				Ω(compositeSummary.RunTime.Seconds()).Should(BeNumerically(">", 0.2))
 			})
 		})

@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeServiceAccounts struct {
 }
 
 var serviceaccountsResource = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "serviceaccounts"}
+
+var serviceaccountsKind = schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ServiceAccount"}
 
 func (c *FakeServiceAccounts) Create(serviceAccount *v1.ServiceAccount) (result *v1.ServiceAccount, err error) {
 	obj, err := c.Fake.
@@ -80,7 +82,7 @@ func (c *FakeServiceAccounts) Get(name string, options meta_v1.GetOptions) (resu
 
 func (c *FakeServiceAccounts) List(opts meta_v1.ListOptions) (result *v1.ServiceAccountList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(serviceaccountsResource, c.ns, opts), &v1.ServiceAccountList{})
+		Invokes(testing.NewListAction(serviceaccountsResource, serviceaccountsKind, c.ns, opts), &v1.ServiceAccountList{})
 
 	if obj == nil {
 		return nil, err

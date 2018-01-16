@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,13 +23,5 @@ package v2alpha1
 type CronJobListerExpansion interface{}
 
 // CronJobNamespaceListerExpansion allows custom methods to be added to
-// CronJobNamespaeLister.
+// CronJobNamespaceLister.
 type CronJobNamespaceListerExpansion interface{}
-
-// JobListerExpansion allows custom methods to be added to
-// JobLister.
-type JobListerExpansion interface{}
-
-// JobNamespaceListerExpansion allows custom methods to be added to
-// JobNamespaeLister.
-type JobNamespaceListerExpansion interface{}

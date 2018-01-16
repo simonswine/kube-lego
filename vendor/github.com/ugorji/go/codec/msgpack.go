@@ -549,7 +549,7 @@ func (d *msgpackDecDriver) DecodeBytes(bs []byte, isstring, zerocopy bool) (bsOu
 			bs = d.b[:]
 		}
 	}
-	return decByteSlice(d.r, clen, d.d.h.MaxInitLen, bs)
+	return decByteSlice(d.r, clen, bs)
 }
 
 func (d *msgpackDecDriver) DecodeString() (s string) {

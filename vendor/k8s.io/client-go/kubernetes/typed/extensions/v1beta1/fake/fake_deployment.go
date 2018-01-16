@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeDeployments struct {
 }
 
 var deploymentsResource = schema.GroupVersionResource{Group: "extensions", Version: "v1beta1", Resource: "deployments"}
+
+var deploymentsKind = schema.GroupVersionKind{Group: "extensions", Version: "v1beta1", Kind: "Deployment"}
 
 func (c *FakeDeployments) Create(deployment *v1beta1.Deployment) (result *v1beta1.Deployment, err error) {
 	obj, err := c.Fake.
@@ -90,7 +92,7 @@ func (c *FakeDeployments) Get(name string, options v1.GetOptions) (result *v1bet
 
 func (c *FakeDeployments) List(opts v1.ListOptions) (result *v1beta1.DeploymentList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(deploymentsResource, c.ns, opts), &v1beta1.DeploymentList{})
+		Invokes(testing.NewListAction(deploymentsResource, deploymentsKind, c.ns, opts), &v1beta1.DeploymentList{})
 
 	if obj == nil {
 		return nil, err

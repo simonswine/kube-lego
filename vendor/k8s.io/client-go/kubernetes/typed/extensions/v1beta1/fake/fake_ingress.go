@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ type FakeIngresses struct {
 }
 
 var ingressesResource = schema.GroupVersionResource{Group: "extensions", Version: "v1beta1", Resource: "ingresses"}
+
+var ingressesKind = schema.GroupVersionKind{Group: "extensions", Version: "v1beta1", Kind: "Ingress"}
 
 func (c *FakeIngresses) Create(ingress *v1beta1.Ingress) (result *v1beta1.Ingress, err error) {
 	obj, err := c.Fake.
@@ -90,7 +92,7 @@ func (c *FakeIngresses) Get(name string, options v1.GetOptions) (result *v1beta1
 
 func (c *FakeIngresses) List(opts v1.ListOptions) (result *v1beta1.IngressList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(ingressesResource, c.ns, opts), &v1beta1.IngressList{})
+		Invokes(testing.NewListAction(ingressesResource, ingressesKind, c.ns, opts), &v1beta1.IngressList{})
 
 	if obj == nil {
 		return nil, err

@@ -1,5 +1,5 @@
 /*
-Copyright 2017 The Kubernetes Authors.
+Copyright 2018 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ type FakePersistentVolumes struct {
 }
 
 var persistentvolumesResource = schema.GroupVersionResource{Group: "", Version: "v1", Resource: "persistentvolumes"}
+
+var persistentvolumesKind = schema.GroupVersionKind{Group: "", Version: "v1", Kind: "PersistentVolume"}
 
 func (c *FakePersistentVolumes) Create(persistentVolume *v1.PersistentVolume) (result *v1.PersistentVolume, err error) {
 	obj, err := c.Fake.
@@ -84,7 +86,7 @@ func (c *FakePersistentVolumes) Get(name string, options meta_v1.GetOptions) (re
 
 func (c *FakePersistentVolumes) List(opts meta_v1.ListOptions) (result *v1.PersistentVolumeList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(persistentvolumesResource, opts), &v1.PersistentVolumeList{})
+		Invokes(testing.NewRootListAction(persistentvolumesResource, persistentvolumesKind, opts), &v1.PersistentVolumeList{})
 	if obj == nil {
 		return nil, err
 	}

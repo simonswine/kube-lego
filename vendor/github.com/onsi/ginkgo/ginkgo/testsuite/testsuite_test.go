@@ -1,3 +1,5 @@
+// +build go1.6
+
 package testsuite_test
 
 import (
@@ -41,7 +43,6 @@ var _ = Describe("TestSuite", func() {
 		cwd, err := os.Getwd()
 		Ω(err).ShouldNot(HaveOccurred())
 		relTmpDir, err = filepath.Rel(cwd, tmpDir)
-		relTmpDir = "./" + relTmpDir
 		Ω(err).ShouldNot(HaveOccurred())
 
 		//go files in the root directory (no tests)
@@ -151,30 +152,30 @@ var _ = Describe("TestSuite", func() {
 			})
 		})
 
-		Context("given GO15VENDOREXPERIMENT", func() {
+		Context("given GO15VENDOREXPERIMENT disabled", func() {
 			BeforeEach(func() {
-				os.Setenv("GO15VENDOREXPERIMENT", "1")
+				os.Setenv("GO15VENDOREXPERIMENT", "0")
 			})
 
 			AfterEach(func() {
 				os.Setenv("GO15VENDOREXPERIMENT", "")
 			})
 
-			It("should skip vendor dirs", func() {
-				suites := SuitesInDir(filepath.Join(tmpDir+"/vendor"), false)
-				Ω(suites).Should(HaveLen(0))
+			It("should not skip vendor dirs", func() {
+				suites := SuitesInDir(filepath.Join(tmpDir+"/vendor"), true)
+				Ω(suites).Should(HaveLen(1))
 			})
 
-			It("should not recurse into vendor dirs", func() {
+			It("should recurse into vendor dirs", func() {
 				suites := SuitesInDir(filepath.Join(tmpDir), true)
-				Ω(suites).Should(HaveLen(3))
+				Ω(suites).Should(HaveLen(4))
 			})
 		})
 
 		Context("when recursively scanning", func() {
 			It("should return suites for corresponding test suites, only", func() {
 				suites := SuitesInDir(tmpDir, true)
-				Ω(suites).Should(HaveLen(4))
+				Ω(suites).Should(HaveLen(3))
 
 				Ω(suites).Should(ContainElement(TestSuite{
 					Path:        relTmpDir + "/colonelmustard",

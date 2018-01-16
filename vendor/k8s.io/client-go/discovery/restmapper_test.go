@@ -25,16 +25,31 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/version"
 	. "k8s.io/client-go/discovery"
-	"k8s.io/client-go/pkg/api"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/rest/fake"
 
-	"github.com/emicklei/go-restful/swagger"
+	"github.com/emicklei/go-restful-swagger12"
+	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRESTMapper(t *testing.T) {
 	resources := []*APIGroupResources{
+		{
+			Group: metav1.APIGroup{
+				Name: "extensions",
+				Versions: []metav1.GroupVersionForDiscovery{
+					{Version: "v1beta"},
+				},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1beta"},
+			},
+			VersionedResources: map[string][]metav1.APIResource{
+				"v1beta": {
+					{Name: "jobs", Namespaced: true, Kind: "Job"},
+					{Name: "pods", Namespaced: true, Kind: "Pod"},
+				},
+			},
+		},
 		{
 			Group: metav1.APIGroup{
 				Versions: []metav1.GroupVersionForDiscovery{
@@ -52,17 +67,29 @@ func TestRESTMapper(t *testing.T) {
 				},
 			},
 		},
+
+		// This group tests finding and prioritizing resources that only exist in non-preferred versions
 		{
 			Group: metav1.APIGroup{
-				Name: "extensions",
+				Name: "unpreferred",
 				Versions: []metav1.GroupVersionForDiscovery{
-					{Version: "v1beta"},
+					{Version: "v1"},
+					{Version: "v2beta1"},
+					{Version: "v2alpha1"},
 				},
-				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1beta"},
+				PreferredVersion: metav1.GroupVersionForDiscovery{Version: "v1"},
 			},
 			VersionedResources: map[string][]metav1.APIResource{
-				"v1beta": {
-					{Name: "jobs", Namespaced: true, Kind: "Job"},
+				"v1": {
+					{Name: "broccoli", Namespaced: true, Kind: "Broccoli"},
+				},
+				"v2beta1": {
+					{Name: "broccoli", Namespaced: true, Kind: "Broccoli"},
+					{Name: "peas", Namespaced: true, Kind: "Pea"},
+				},
+				"v2alpha1": {
+					{Name: "broccoli", Namespaced: true, Kind: "Broccoli"},
+					{Name: "peas", Namespaced: true, Kind: "Pea"},
 				},
 			},
 		},
@@ -74,6 +101,15 @@ func TestRESTMapper(t *testing.T) {
 		input schema.GroupVersionResource
 		want  schema.GroupVersionKind
 	}{
+		{
+			input: schema.GroupVersionResource{
+				Resource: "pods",
+			},
+			want: schema.GroupVersionKind{
+				Version: "v1",
+				Kind:    "Pod",
+			},
+		},
 		{
 			input: schema.GroupVersionResource{
 				Version:  "v1",
@@ -113,6 +149,16 @@ func TestRESTMapper(t *testing.T) {
 				Kind:    "Job",
 			},
 		},
+		{
+			input: schema.GroupVersionResource{
+				Resource: "peas",
+			},
+			want: schema.GroupVersionKind{
+				Group:   "unpreferred",
+				Version: "v2beta1",
+				Kind:    "Pea",
+			},
+		},
 	}
 
 	for _, tc := range kindTCs {
@@ -131,6 +177,15 @@ func TestRESTMapper(t *testing.T) {
 		input schema.GroupVersionResource
 		want  schema.GroupVersionResource
 	}{
+		{
+			input: schema.GroupVersionResource{
+				Resource: "pods",
+			},
+			want: schema.GroupVersionResource{
+				Version:  "v1",
+				Resource: "pods",
+			},
+		},
 		{
 			input: schema.GroupVersionResource{
 				Version:  "v1",
@@ -189,7 +244,7 @@ func TestDeferredDiscoveryRESTMapper_CacheMiss(t *testing.T) {
 	assert := assert.New(t)
 
 	cdc := fakeCachedDiscoveryInterface{fresh: false}
-	m := NewDeferredDiscoveryRESTMapper(&cdc, api.Registry.InterfacesFor)
+	m := NewDeferredDiscoveryRESTMapper(&cdc, nil)
 	assert.False(cdc.fresh, "should NOT be fresh after instantiation")
 	assert.Zero(cdc.invalidateCalls, "should not have called Invalidate()")
 
@@ -327,4 +382,8 @@ func (c *fakeCachedDiscoveryInterface) ServerVersion() (*version.Info, error) {
 
 func (c *fakeCachedDiscoveryInterface) SwaggerSchema(version schema.GroupVersion) (*swagger.ApiDeclaration, error) {
 	return &swagger.ApiDeclaration{}, nil
+}
+
+func (c *fakeCachedDiscoveryInterface) OpenAPISchema() (*spec.Swagger, error) {
+	return &spec.Swagger{}, nil
 }
