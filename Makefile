@@ -2,7 +2,7 @@ ACCOUNT=jetstack
 APP_NAME=kube-lego
 
 PACKAGE_NAME=github.com/${ACCOUNT}/${APP_NAME}
-GO_VERSION=1.8
+GO_VERSION=1.9.2
 
 GOOS := linux
 GOARCH := amd64
