@@ -15,30 +15,31 @@ import (
 )
 
 type KubeLego struct {
-	legoURL                      string
-	legoEmail                    string
-	legoSecretName               string
-	legoIngressNameNginx         string
-	legoNamespace                string
-	legoPodIP                    net.IP
-	legoServiceNameNginx         string
-	legoServiceNameGce           string
-	legoSupportedIngressClass    []string
-	legoSupportedIngressProvider []string
-	legoHTTPPort                 intstr.IntOrString
-	legoCheckInterval            time.Duration
-	legoMinimumValidity          time.Duration
-	legoDefaultIngressClass      string
-	legoDefaultIngressProvider   string
-	legoKubeApiURL               string
-	legoWatchNamespace           string
-	kubeClient                   *kubernetes.Clientset
-	legoIngressSlice             []*ingress.Ingress
-	legoIngressProvider          map[string]kubelego.IngressProvider
-	log                          *log.Entry
-	version                      string
-	acmeClient                   kubelego.Acme
-	legoRsaKeySize               int
+	legoURL                          string
+	legoEmail                        string
+	legoSecretName                   string
+	legoIngressNameNginx             string
+	legoNamespace                    string
+	legoPodIP                        net.IP
+	legoServiceNameNginx             string
+	legoServiceNameGce               string
+	legoSupportedIngressClass        []string
+	legoSupportedIngressProvider     []string
+	legoHTTPPort                     intstr.IntOrString
+	legoCheckInterval                time.Duration
+	legoMinimumValidity              time.Duration
+	legoDefaultIngressClass          string
+	legoDefaultIngressProvider       string
+	legoKubeApiURL                   string
+	legoWatchNamespace               string
+	kubeClient                       *kubernetes.Clientset
+	legoIngressSlice                 []*ingress.Ingress
+	legoIngressProvider              map[string]kubelego.IngressProvider
+	log                              *log.Entry
+	version                          string
+	acmeClient                       kubelego.Acme
+	legoRsaKeySize                   int
+	exponentialBackoffMaxElapsedTime time.Duration
 
 	// stop channel for services
 	stopCh chan struct{}
