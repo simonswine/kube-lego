@@ -124,7 +124,9 @@ At some point you'll be ready to use LetsEncrypt production API URL. To make the
 | `LEGO_KUBE_ANNOTATION` | n | `kubernetes.io/tls-acme` | Set the ingress annotation used by this instance of kube-lego to get certificate for from Let's Encrypt. Allows you to run kube-lego against staging and production LE |
 | `LEGO_WATCH_NAMESPACE` | n | `` | Namespace that kube-lego should watch for ingresses and services |
 | `LEGO_RSA_KEYSIZE` | n | `2048` | Size of the private RSA key |
-| `LEGO_EXPONENTIAL_BACKOFF_MAX_ELAPSED_TIME` | n | `60s` | Max time to wait for each domain authorization attempt |
+| `LEGO_EXPONENTIAL_BACKOFF_MAX_ELAPSED_TIME` | n | `5m` | Max time to wait for each domain authorization attempt |
+| `LEGO_EXPONENTIAL_BACKOFF_MAX_INITIAL_INTERVAL` | n | `30s` | Initial interval to wait for each domain authorization attempt |
+| `LEGO_EXPONENTIAL_BACKOFF_MAX_MULTIPLIER` | n | `2.0` | Multiplier for every step |
 
 ## Full deployment examples
 

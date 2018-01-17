@@ -31,7 +31,9 @@ func TestAcme_E2E(t *testing.T) {
 	mockKL.EXPECT().LegoEmail().MinTimes(1).Return("kube-lego-e2e@example.com")
 	mockKL.EXPECT().SaveAcmeUser(gomock.Any()).MinTimes(1).Return(nil)
 	mockKL.EXPECT().LegoRsaKeySize().AnyTimes().Return(2048)
-	mockKL.EXPECT().ExponentialBackoffMaxElapsedTime().MinTimes(1).Return(time.Second * 60)
+	mockKL.EXPECT().ExponentialBackoffMaxElapsedTime().MinTimes(1).Return(time.Minute * 5)
+	mockKL.EXPECT().ExponentialBackoffInitialInterval().MinTimes(1).Return(time.Second * 30)
+	mockKL.EXPECT().ExponentialBackoffMultiplier().MinTimes(1).Return(2.0)
 
 	// set up ngrok
 	command := []string{"ngrok", "http", "--bind-tls", "false", "8181"}

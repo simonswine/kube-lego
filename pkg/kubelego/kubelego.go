@@ -192,6 +192,14 @@ func (kl *KubeLego) ExponentialBackoffMaxElapsedTime() time.Duration {
 	return kl.exponentialBackoffMaxElapsedTime
 }
 
+func (kl *KubeLego) ExponentialBackoffInitialInterval() time.Duration {
+	return kl.exponentialBackoffInitialInterval
+}
+
+func (kl *KubeLego) ExponentialBackoffMultiplier() float64 {
+	return kl.exponentialBackoffMultiplier
+}
+
 func (kl *KubeLego) LegoPodIP() net.IP {
 	return kl.legoPodIP
 }
@@ -424,16 +432,39 @@ func (kl *KubeLego) paramsLego() error {
 		} else {
 			kl.legoRsaKeySize = rsaKeySizeNumeric
 		}
+	}
 
 	exponentialBackoffMaxElapsedTime := os.Getenv("LEGO_EXPONENTIAL_BACKOFF_MAX_ELAPSED_TIME")
 	if len(exponentialBackoffMaxElapsedTime) == 0 {
-		kl.exponentialBackoffMaxElapsedTime = time.Second * 60
+		kl.exponentialBackoffMaxElapsedTime = time.Minute * 5
 	} else {
 		d, err := time.ParseDuration(exponentialBackoffMaxElapsedTime)
 		if err != nil {
 			return err
 		}
 		kl.exponentialBackoffMaxElapsedTime = d
+	}
+
+	exponentialBackoffInitialInterval := os.Getenv("LEGO_EXPONENTIAL_BACKOFF_INITIAL_INTERVAL")
+	if len(exponentialBackoffInitialInterval) == 0 {
+		kl.exponentialBackoffInitialInterval = time.Second * 30
+	} else {
+		d, err := time.ParseDuration(exponentialBackoffInitialInterval)
+		if err != nil {
+			return err
+		}
+		kl.exponentialBackoffInitialInterval = d
+	}
+
+	exponentialBackoffMultiplier := os.Getenv("LEGO_EXPONENTIAL_BACKOFF_MULTIPLIER")
+	if len(exponentialBackoffMultiplier) == 0 {
+		kl.exponentialBackoffMultiplier = 2.0
+	} else {
+		f, err := strconv.ParseFloat(exponentialBackoffMultiplier, 64)
+		if err != nil {
+			return err
+		}
+		kl.exponentialBackoffMultiplier = f
 	}
 
 	return nil

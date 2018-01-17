@@ -13,8 +13,6 @@ import (
 	"net/url"
 	"sync"
 
-	"time"
-
 	"github.com/cenk/backoff"
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"golang.org/x/crypto/acme"
@@ -143,6 +141,8 @@ func (a *Acme) ObtainCertificate(domains []string) (data map[string][]byte, err 
 
 			b := backoff.NewExponentialBackOff()
 			b.MaxElapsedTime = a.kubelego.ExponentialBackoffMaxElapsedTime()
+			b.InitialInterval = a.kubelego.ExponentialBackoffInitialInterval()
+			b.Multiplier = a.kubelego.ExponentialBackoffMultiplier()
 
 			err = backoff.Retry(op, b)
 			if err != nil {
