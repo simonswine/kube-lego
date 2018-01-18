@@ -2,16 +2,7 @@ provider "google" {
   project     = "jetstack-gke"
   region      = "europe-west1"
   credentials = "${file("~/.gcloud/jetstack-gke.json")}"
-}
-
-variable "master_auth_username" {
-  type    = "string"
-  default = "admin"
-}
-
-variable "master_auth_password" {
-  type    = "string"
-  default = "insecure"
+  version = "~> 1.4"
 }
 
 variable "cluster_name" {
@@ -41,11 +32,6 @@ resource "google_container_cluster" "e2e-test" {
   initial_node_count = 1
 
   description = "e2e test for kube-lego"
-
-  master_auth {
-    username = "${var.master_auth_username}"
-    password = "${var.master_auth_password}"
-  }
 
   node_config {
     machine_type = "n1-standard-1"
