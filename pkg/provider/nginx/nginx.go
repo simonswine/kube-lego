@@ -1,14 +1,14 @@
 package nginx
 
 import (
-	"github.com/jetstack/kube-lego/pkg/ingress"
-	kubelego "github.com/jetstack/kube-lego/pkg/kubelego_const"
-	"github.com/jetstack/kube-lego/pkg/service"
-
 	"sort"
 
 	"github.com/Sirupsen/logrus"
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+
+	"github.com/jetstack/kube-lego/pkg/ingress"
+	kubelego "github.com/jetstack/kube-lego/pkg/kubelego_const"
+	"github.com/jetstack/kube-lego/pkg/service"
 )
 
 var _ kubelego.IngressProvider = &Nginx{}

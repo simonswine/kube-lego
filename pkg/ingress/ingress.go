@@ -175,7 +175,12 @@ func (i *Ingress) IngressClass() string {
 func (i *Ingress) IngressProvider() string {
 	val, ok := i.IngressApi.Annotations[kubelego.AnnotationIngressProvider]
 	if !ok {
-		return i.kubelego.LegoDefaultIngressProvider()
+		class := i.IngressClass()
+		if class == "gce" || class == "nginx" {
+			return class
+		} else {
+			return i.kubelego.LegoDefaultIngressProvider()
+		}
 	}
 	return strings.ToLower(val)
 }
