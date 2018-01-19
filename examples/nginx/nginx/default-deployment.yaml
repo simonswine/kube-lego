@@ -5,6 +5,9 @@ metadata:
   namespace: nginx-ingress
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: default-http-backend
   template:
     metadata:
       labels:

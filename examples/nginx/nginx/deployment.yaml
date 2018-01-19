@@ -5,10 +5,13 @@ metadata:
   namespace: nginx-ingress
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-ingress
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx-ingress
     spec:
       containers:
       - image: gcr.io/google_containers/nginx-ingress-controller:0.8.3

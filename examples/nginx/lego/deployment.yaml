@@ -3,7 +3,12 @@ kind: Deployment
 metadata:
   name: kube-lego
   namespace: kube-lego
+  labels:
+    app: kube-lego
 spec:
+  selector:
+    matchLabels:
+      app: kube-lego
   replicas: 1
   template:
     metadata:
