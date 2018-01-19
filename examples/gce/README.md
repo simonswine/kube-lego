@@ -13,6 +13,8 @@ kubectl apply -f lego/00-namespace.yaml
 kubectl apply -f lego/configmap.yaml 
 # Deployment
 kubectl apply -f lego/deployment.yaml
+# RBAC role & binding
+kubectl apply -f lego/rbac.yaml
 # Service is created by kube-lego in every used namespace
 ```
 

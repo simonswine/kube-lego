@@ -52,6 +52,7 @@ kubectl apply -f echoserver/ingress-notls.yaml
 ```
 kubectl apply -f lego/configmap.yaml
 kubectl apply -f lego/deployment.yaml
+kubectl apply -f lego/rbac.yaml
 ```
 - Change the email address in `lego/configmap.yaml` before creating the
   kubernetes resource
