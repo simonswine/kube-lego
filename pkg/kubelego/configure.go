@@ -79,7 +79,7 @@ func (kl *KubeLego) processProvider(ings []kubelego.Ingress) (err error) {
 	return nil
 }
 
-func (kl *KubeLego) reconfigure(ingressesAll []kubelego.Ingress) error {
+func (kl *KubeLego) reconfigure(ingressesAll []kubelego.Ingress) []error {
 	tlsSlice := []kubelego.Tls{}
 	ingresses := []kubelego.Ingress{}
 
@@ -100,7 +100,16 @@ func (kl *KubeLego) reconfigure(ingressesAll []kubelego.Ingress) error {
 
 	// process certificate validity
 	kl.Log().Info("process certificate requests for ingresses")
-	errs := kl.TlsProcessHosts(tlsSlice)
+	return kl.TlsProcessHosts(tlsSlice)
+}
+
+func (kl *KubeLego) Reconfigure(namespace string) error {
+	ingresses, err := ingress.All(kl, namespace)
+	if err != nil {
+		return err
+	}
+
+	errs := kl.reconfigure(ingresses)
 	if len(errs) > 0 {
 		errsStr := []string{}
 		for _, err := range errs {
@@ -109,19 +118,10 @@ func (kl *KubeLego) reconfigure(ingressesAll []kubelego.Ingress) error {
 		kl.Log().Error("Error while processing certificate requests: ", strings.Join(errsStr, ", "))
 
 		// request a rerun of reconfigure
-		kl.workQueue.Add(true)
+		kl.workQueue.Add(namespace)
 	}
 
 	return nil
-}
-
-func (kl *KubeLego) Reconfigure() error {
-	ingressesAll, err := ingress.All(kl)
-	if err != nil {
-		return err
-	}
-
-	return kl.reconfigure(ingressesAll)
 }
 
 func (kl *KubeLego) TlsProcessHosts(tlsSlice []kubelego.Tls) []error {

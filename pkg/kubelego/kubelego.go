@@ -142,7 +142,7 @@ func (kl *KubeLego) Init() {
 	go func() {
 		for timestamp := range ticker.C {
 			kl.Log().Infof("Periodically check certificates at %s", timestamp)
-			kl.requestReconfigure()
+			kl.requestReconfigure(kl.LegoWatchNamespace())
 		}
 	}()
 

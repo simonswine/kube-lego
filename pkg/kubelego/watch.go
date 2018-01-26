@@ -27,8 +27,29 @@ func ingressWatchFunc(c *kubernetes.Clientset, ns string) func(options k8sMeta.L
 	}
 }
 
-func (kl *KubeLego) requestReconfigure() {
-	kl.workQueue.Add(true)
+func (kl *KubeLego) requestReconfigureForIngress(obj interface{}, event string) {
+	ingressApi := obj.(*k8sExtensions.Ingress)
+	logger := kl.Log().WithFields(logrus.Fields{
+		"ingress":   ingressApi.Name,
+		"namespace": ingressApi.Namespace,
+	})
+
+	logger.Debugf("%s event triggered", event)
+
+	if err := ingress.IgnoreIngress(ingressApi); err != nil {
+		kl.Log().WithFields(logrus.Fields{
+			"ingress":   ingressApi.Name,
+			"namespace": ingressApi.Namespace,
+		}).Info("ignoring as ", err)
+
+		return
+	}
+
+	kl.requestReconfigure(ingressApi.Namespace)
+}
+
+func (kl *KubeLego) requestReconfigure(namespace string) {
+	kl.workQueue.Add(namespace)
 }
 
 func (kl *KubeLego) WatchReconfigure() {
@@ -50,7 +71,7 @@ func (kl *KubeLego) WatchReconfigure() {
 				return
 			}
 			kl.Log().Debugf("worker: begin processing %v", item)
-			kl.Reconfigure()
+			kl.Reconfigure(item.(string))
 			kl.Log().Debugf("worker: done processing %v", item)
 			kl.workQueue.Done(item)
 		}

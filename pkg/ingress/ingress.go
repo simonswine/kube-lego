@@ -76,8 +76,8 @@ func New(client kubelego.KubeLego, namespace string, name string) *Ingress {
 	return ingress
 }
 
-func All(client kubelego.KubeLego) (ingresses []kubelego.Ingress, err error) {
-	ingSlice, err := client.KubeClient().Extensions().Ingresses(client.LegoWatchNamespace()).List(k8sMeta.ListOptions{})
+func All(client kubelego.KubeLego, namespace string) (ingresses []kubelego.Ingress, err error) {
+	ingSlice, err := client.KubeClient().Extensions().Ingresses(namespace).List(k8sMeta.ListOptions{})
 
 	if err != nil {
 		return
