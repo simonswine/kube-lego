@@ -83,7 +83,7 @@ func All(client kubelego.KubeLego) (ingresses []kubelego.Ingress, err error) {
 		return
 	}
 
-	for i, _ := range ingSlice.Items {
+	for i := range ingSlice.Items {
 		ingresses = append(
 			ingresses,
 			&Ingress{
@@ -206,11 +206,8 @@ func (i *Ingress) KubeLego() kubelego.KubeLego {
 }
 
 func (i *Ingress) Tls() (out []kubelego.Tls) {
-	for count, _ := range i.IngressApi.Spec.TLS {
-		out = append(out, &Tls{
-			IngressTLS: &i.IngressApi.Spec.TLS[count],
-			ingress:    i,
-		})
+	for count := range i.IngressApi.Spec.TLS {
+		out = append(out, NewTls(&i.IngressApi.Spec.TLS[count], i))
 	}
 	return
 }

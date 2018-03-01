@@ -18,9 +18,29 @@ import (
 var _ kubelego.Tls = &Tls{}
 
 type Tls struct {
-	*k8sExtensions.IngressTLS
-	ingress kubelego.Ingress
-	secret  kubelego.Secret
+	namespace  string
+	name       string
+	secretName string
+	hosts      []string
+	kl         kubelego.KubeLego
+	secret     kubelego.Secret
+	logger     func() *logrus.Entry
+}
+
+func NewTls(ingtls *k8sExtensions.IngressTLS, ing kubelego.Ingress) *Tls {
+	t := Tls{
+		secretName: ingtls.SecretName,
+		hosts:      utils.StringSliceLowerCase(ingtls.Hosts),
+		kl:         ing.KubeLego(),
+		logger:     ing.Log,
+	}
+
+	if ing.Object() != nil {
+		t.namespace = ing.Object().Namespace
+		t.name = ing.Object().Name
+	}
+
+	return &t
 }
 
 func (t *Tls) Validate() error {
@@ -28,23 +48,23 @@ func (t *Tls) Validate() error {
 		return fmt.Errorf("No hosts specified")
 	}
 
-	if t.SecretName == "" {
+	if t.secretName == "" {
 		return fmt.Errorf("No secret name specified")
 	}
 	return nil
 }
 
-func (t Tls) SecretMetadata() (meta *k8sApi.ObjectMeta) {
+func (t *Tls) SecretMetadata() (meta *k8sApi.ObjectMeta) {
 	return &k8sApi.ObjectMeta{
-		Namespace: t.ingress.Object().Namespace,
-		Name:      t.SecretName,
+		Namespace: t.namespace,
+		Name:      t.secretName,
 	}
 }
 
-func (t Tls) IngressMetadata() (meta *k8sApi.ObjectMeta) {
+func (t *Tls) IngressMetadata() (meta *k8sApi.ObjectMeta) {
 	return &k8sApi.ObjectMeta{
-		Namespace: t.ingress.Object().Namespace,
-		Name:      t.ingress.Object().Name,
+		Namespace: t.namespace,
+		Name:      t.name,
 	}
 }
 
@@ -52,21 +72,20 @@ func (t *Tls) Secret() kubelego.Secret {
 	if t.secret != nil {
 		return t.secret
 	}
-	meta := t.SecretMetadata()
-	t.secret = secret.New(t.ingress.KubeLego(), meta.Namespace, meta.Name)
+	t.secret = secret.New(t.kl, t.namespace, t.secretName)
 	return t.secret
 }
 
 func (t *Tls) Hosts() []string {
-	return utils.StringSliceLowerCase(t.IngressTLS.Hosts)
+	return t.hosts
 }
 
 func (t *Tls) Log() *logrus.Entry {
-	return t.ingress.Log().WithField("context", "ingress_tls")
+	return t.logger().WithField("context", "ingress_tls")
 }
 
 func (i *Tls) newCertNeeded() bool {
-	if len(i.Hosts()) == 0 {
+	if len(i.hosts) == 0 {
 		i.Log().Info("no host associated with ingress")
 		return false
 	}
@@ -77,8 +96,8 @@ func (i *Tls) newCertNeeded() bool {
 		return true
 	}
 
-	if !tlsSecret.TlsDomainsInclude(i.Hosts()) {
-		i.Log().WithField("domains", i.Hosts()).Info("cert does not cover all domains")
+	if !tlsSecret.TlsDomainsInclude(i.hosts) {
+		i.Log().WithField("domains", i.hosts).Info("cert does not cover all domains")
 		return true
 	}
 
@@ -88,45 +107,44 @@ func (i *Tls) newCertNeeded() bool {
 		return true
 	}
 
-	minimumValidity := i.ingress.KubeLego().LegoMinimumValidity()
-	timeLeft := expireTime.Sub(time.Now())
+	minimumValidity := i.kl.LegoMinimumValidity()
+	timeLeft := time.Until(expireTime)
 	logger := i.Log().WithField("expire_time", expireTime)
 	if timeLeft < minimumValidity {
 		logger.Infof("cert expires soon so renew")
 		return true
-	} else {
-		logger.Infof("cert expires in %.1f days, no renewal needed", timeLeft.Hours()/24)
 	}
 
+	logger.Infof("cert expires in %.1f days, no renewal needed", timeLeft.Hours()/24)
 	return false
 }
 
-func (i *Tls) Process() error {
+func (t *Tls) Process() error {
 
-	if !i.newCertNeeded() {
-		i.Log().Infof("no cert request needed")
+	if !t.newCertNeeded() {
+		t.Log().Infof("no cert request needed")
 		return nil
 	}
 
-	return i.RequestCert()
+	return t.RequestCert()
 }
 
-func (i *Tls) RequestCert() error {
+func (t *Tls) RequestCert() error {
 	// sanity check
-	if i.IngressTLS.SecretName == "" {
+	if t.secretName == "" {
 		return errors.New("Ingress has an empty secretName. Skipping certificate retrieval")
 	}
 
-	i.Log().Infof("requesting certificate for %s", strings.Join(i.Hosts(), ","))
+	t.Log().Infof("requesting certificate for %s", strings.Join(t.Hosts(), ","))
 
-	certData, err := i.ingress.KubeLego().AcmeClient().ObtainCertificate(
-		i.Hosts(),
+	certData, err := t.kl.AcmeClient().ObtainCertificate(
+		t.Hosts(),
 	)
 	if err != nil {
 		return err
 	}
 
-	s := i.Secret()
+	s := t.Secret()
 	s.Object().Annotations = map[string]string{
 		kubelego.AnnotationEnabled: "true",
 	}

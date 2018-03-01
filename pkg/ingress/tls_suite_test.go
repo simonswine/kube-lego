@@ -7,15 +7,15 @@ import (
 	"github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/jetstack/kube-lego/pkg/mocks"
 
+	"net/http"
+	"net/http/httptest"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes"
-	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
-	"net/http"
-	"net/http/httptest"
 )
 
 func TestTls(t *testing.T) {
@@ -37,17 +37,14 @@ var _ = Describe("Tls", func() {
 		defer ctrlMock.Finish()
 
 		tls = &Tls{
-			IngressTLS: &k8sExtensions.IngressTLS{
-				Hosts:      []string{"das.de.de", "k8s.io"},
-				SecretName: "my-secret",
-			},
+			secretName: "my-secret",
+			hosts:      []string{"das.de.de", "k8s.io"},
 		}
 
 		mockKl = mocks.DummyKubeLego(ctrlMock)
 		mockIng = mocks.DummyIngressDomain1(ctrlMock, []kubelego.Tls{tls})
 		mockSec = mocks.DummySecret(ctrlMock, time.Now(), []string{"das.de.de"})
 
-		tls.ingress = mockIng
 	})
 
 	Describe("Secret", func() {
@@ -62,6 +59,12 @@ var _ = Describe("Tls", func() {
 				mockKl.EXPECT().KubeClient().AnyTimes().Return(kubeClient)
 				mockIng.EXPECT().KubeLego().AnyTimes().Return(mockKl)
 
+				tls.kl = mockIng.KubeLego()
+				tls.logger = mockIng.Log
+				if mockIng.Object() != nil {
+					tls.namespace = mockIng.Object().Namespace
+					tls.name = mockIng.Object().Name
+				}
 				secret := tls.Secret()
 
 				Expect(secret).NotTo(BeNil())
@@ -100,6 +103,14 @@ var _ = Describe("Tls", func() {
 					time.Now().Add(-time.Minute),
 					nil,
 				)
+
+				tls.kl = mockIng.KubeLego()
+				tls.logger = mockIng.Log
+				if mockIng.Object() != nil {
+					tls.namespace = mockIng.Object().Namespace
+					tls.name = mockIng.Object().Name
+				}
+
 				Expect(
 					tls.newCertNeeded(),
 				).To(Equal(true))
@@ -109,6 +120,14 @@ var _ = Describe("Tls", func() {
 					time.Now().Add(48*time.Hour),
 					nil,
 				)
+
+				tls.kl = mockIng.KubeLego()
+				tls.logger = mockIng.Log
+				if mockIng.Object() != nil {
+					tls.namespace = mockIng.Object().Namespace
+					tls.name = mockIng.Object().Name
+				}
+
 				Expect(
 					tls.newCertNeeded(),
 				).To(Equal(true))
@@ -118,6 +137,14 @@ var _ = Describe("Tls", func() {
 					time.Now().Add(30*24*time.Hour),
 					nil,
 				)
+
+				tls.kl = mockIng.KubeLego()
+				tls.logger = mockIng.Log
+				if mockIng.Object() != nil {
+					tls.namespace = mockIng.Object().Namespace
+					tls.name = mockIng.Object().Name
+				}
+
 				Expect(
 					tls.newCertNeeded(),
 				).To(Equal(false))
