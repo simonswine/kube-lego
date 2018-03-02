@@ -3,9 +3,12 @@ package ingress
 import (
 	"testing"
 
+	kubelego "github.com/jetstack/kube-lego/pkg/kubelego_const"
 	"github.com/stretchr/testify/assert"
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
+
+var _ kubelego.Tls = &Tls{}
 
 func TestTls_Validate(t *testing.T) {
 	tt := []struct {

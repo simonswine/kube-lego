@@ -46,6 +46,7 @@ type Acme interface {
 
 type Tls interface {
 	Hosts() []string
+	AddHost(string)
 	SecretMetadata() *k8sApi.ObjectMeta
 	IngressMetadata() *k8sApi.ObjectMeta
 	Process() error

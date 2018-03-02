@@ -20,6 +20,16 @@ func (m *mockTls) Hosts() []string {
 	return m.hosts
 }
 
+func (m *mockTls) AddHost(host string) {
+	for _, h := range m.hosts {
+		if h == host {
+			return
+		}
+	}
+
+	m.hosts = append(m.hosts, host)
+}
+
 func (m *mockTls) SecretMetadata() *k8sApi.ObjectMeta {
 	return &k8sApi.ObjectMeta{
 		Name:      m.SecretName,
@@ -39,8 +49,8 @@ func (m *mockTls) Process() error {
 	return nil
 }
 
-func getTlsExample() []kubelego.Tls {
-	return []kubelego.Tls{
+func getTlsExample() ([]kubelego.Tls, []kubelego.Tls) {
+	inp := []kubelego.Tls{
 		&mockTls{
 			SecretName:  "secret1",
 			IngressName: "ingress1",
@@ -66,11 +76,34 @@ func getTlsExample() []kubelego.Tls {
 			hosts:       []string{"domain1"},
 		},
 	}
+
+	out := []kubelego.Tls{
+		&mockTls{
+			SecretName:  "secret1",
+			IngressName: "ingress1",
+			Namespace:   "namespace1",
+			hosts:       []string{"domain1"},
+		},
+		&mockTls{
+			SecretName:  "secret2",
+			IngressName: "ingress2",
+			Namespace:   "namespace1",
+			hosts:       []string{"domain2"},
+		},
+		&mockTls{
+			SecretName:  "secret1",
+			IngressName: "ingress3",
+			Namespace:   "namespace2",
+			hosts:       []string{"domain3", "domain4"},
+		},
+	}
+
+	return inp, out
 }
 
 func TestKubeLego_TlsIgnoreDuplicatedSecrets(t *testing.T) {
 	k := New("test")
-	input := getTlsExample()
+	input, expected := getTlsExample()
 	output := k.TlsIgnoreDuplicatedSecrets(input)
-	assert.EqualValues(t, 2, len(output))
+	assert.ElementsMatch(t, output, expected)
 }

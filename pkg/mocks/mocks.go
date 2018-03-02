@@ -425,6 +425,16 @@ func (mr *MockTlsMockRecorder) Hosts() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Hosts", reflect.TypeOf((*MockTls)(nil).Hosts))
 }
 
+// AddHost mocks base method
+func (m *MockTls) AddHost(arg0 string) {
+	m.ctrl.Call(m, "AddHost", arg0)
+}
+
+// AddHost indicates an expected call of AddHost
+func (mr *MockTlsMockRecorder) AddHost(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddHost", reflect.TypeOf((*MockTls)(nil).AddHost), arg0)
+}
+
 // SecretMetadata mocks base method
 func (m *MockTls) SecretMetadata() *v1.ObjectMeta {
 	ret := m.ctrl.Call(m, "SecretMetadata")

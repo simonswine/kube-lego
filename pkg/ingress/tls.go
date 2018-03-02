@@ -15,8 +15,6 @@ import (
 	k8sExtensions "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
-var _ kubelego.Tls = &Tls{}
-
 type Tls struct {
 	namespace  string
 	name       string
@@ -78,6 +76,15 @@ func (t *Tls) Secret() kubelego.Secret {
 
 func (t *Tls) Hosts() []string {
 	return t.hosts
+}
+func (t *Tls) AddHost(host string) {
+	for _, h := range t.hosts {
+		if h == host {
+			return
+		}
+	}
+
+	t.hosts = append(t.hosts, host)
 }
 
 func (t *Tls) Log() *logrus.Entry {
