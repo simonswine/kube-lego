@@ -130,8 +130,8 @@ func (kl *KubeLego) Init() {
 
 	// run acme http server
 	myAcme := acme.New(kl)
+	kl.waitGroup.Add(1)
 	go func() {
-		kl.waitGroup.Add(1)
 		defer kl.waitGroup.Done()
 		myAcme.RunServer(kl.stopCh)
 	}()

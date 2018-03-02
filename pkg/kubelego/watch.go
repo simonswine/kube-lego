@@ -41,8 +41,8 @@ func (kl *KubeLego) WatchReconfigure() {
 		kl.workQueue.ShutDown()
 	}()
 
+	kl.waitGroup.Add(1)
 	go func() {
-		kl.waitGroup.Add(1)
 		defer kl.waitGroup.Done()
 		for {
 			item, quit := kl.workQueue.Get()
