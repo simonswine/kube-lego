@@ -436,7 +436,7 @@ func (kl *KubeLego) paramsLego() error {
 
 	exponentialBackoffMaxElapsedTime := os.Getenv("LEGO_EXPONENTIAL_BACKOFF_MAX_ELAPSED_TIME")
 	if len(exponentialBackoffMaxElapsedTime) == 0 {
-		kl.exponentialBackoffMaxElapsedTime = time.Minute * 5
+		kl.exponentialBackoffMaxElapsedTime = 24 * time.Hour
 	} else {
 		d, err := time.ParseDuration(exponentialBackoffMaxElapsedTime)
 		if err != nil {
