@@ -6,6 +6,7 @@ import (
 
 	"fmt"
 	"strings"
+	"time"
 )
 
 func (kl *KubeLego) TlsIgnoreDuplicatedSecrets(tlsSlice []kubelego.Tls) []kubelego.Tls {
@@ -67,6 +68,10 @@ func (kl *KubeLego) processProvider(ings []kubelego.Ingress) (err error) {
 				err = provider.Process(ing)
 				if err != nil {
 					provider.Log().Error(err)
+					// On errors, sleep 10 minutes so we don't hammer the Let's Encrypt
+					// servers. TODO: Make this exponential backoff, going as high as a
+					// day on repeated failures.
+					time.Sleep(10 * time.Minute)
 				}
 			}
 		}
@@ -74,6 +79,10 @@ func (kl *KubeLego) processProvider(ings []kubelego.Ingress) (err error) {
 		err = provider.Finalize()
 		if err != nil {
 			provider.Log().Error(err)
+			// On errors, sleep 10 minutes so we don't hammer the Let's Encrypt
+			// servers. TODO: Make this exponential backoff, going as high as a
+			// day on repeated failures.
+			time.Sleep(10 * time.Minute)
 		}
 	}
 	return nil
