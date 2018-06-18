@@ -35,7 +35,7 @@ func (kl *KubeLego) requestReconfigure() error {
 		return err
 	}
 	for _, ing := range allIng {
-		key, err := cache.MetaNamespaceKeyFunc(ing.Object)
+		key, err := cache.MetaNamespaceKeyFunc(ing.Object())
 		if err != nil {
 			return err
 		}
