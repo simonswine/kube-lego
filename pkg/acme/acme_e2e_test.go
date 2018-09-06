@@ -16,7 +16,6 @@ import (
 )
 
 func TestAcme_E2E(t *testing.T) {
-	t.Skip("Temporarily skipping due to Let's Encrypt staging outage")
 	logrus.SetLevel(logrus.DebugLevel)
 	log := logrus.WithField("context", "test-mock")
 
