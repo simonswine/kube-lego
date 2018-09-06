@@ -26,28 +26,26 @@ func (kl *KubeLego) TlsIgnoreDuplicatedSecrets(tlsSlice []kubelego.Tls) []kubele
 
 	output := []kubelego.Tls{}
 	for key, slice := range tlsBySecret {
-		if len(slice) == 1 {
-			output = append(output, slice...)
-			continue
-		}
-
-		texts := []string{}
-		for _, elem := range slice {
-			texts = append(
-				texts,
-				fmt.Sprintf(
-					"ingress %s/%s (hosts: %s)",
-					elem.IngressMetadata().Namespace,
-					elem.IngressMetadata().Name,
-					strings.Join(elem.Hosts(), ", "),
-				),
+		output = append(output, slice[0])
+		if len(slice) > 1 {
+			texts := []string{}
+			for _, elem := range slice[1:] {
+				texts = append(
+					texts,
+					fmt.Sprintf(
+						"ingress %s/%s (hosts: %s)",
+						elem.IngressMetadata().Namespace,
+						elem.IngressMetadata().Name,
+						strings.Join(elem.Hosts(), ", "),
+					),
+				)
+			}
+			kl.Log().Warnf(
+				"the secret %s is used multiple times. These linked TLS ingress elements where ignored: %s",
+				key,
+				strings.Join(texts, ", "),
 			)
 		}
-		kl.Log().Warnf(
-			"the secret %s is used multiple times. These linked TLS ingress elements where ignored: %s",
-			key,
-			strings.Join(texts, ", "),
-		)
 	}
 
 	return output
