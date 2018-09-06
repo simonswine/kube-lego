@@ -19,6 +19,7 @@ func New(kubeLego kubelego.KubeLego) *Acme {
 		kubelego:              kubeLego,
 		challengesHostToToken: map[string]string{},
 		challengesTokenToKey:  map[string]string{},
+		domainsToVerify:       map[string]struct{}{},
 		id:                    utils.RandomToken(16),
 	}
 	if kubeLego != nil {
@@ -60,6 +61,12 @@ func (a *Acme) Mux() *http.ServeMux {
 	mux.HandleFunc(kubelego.AcmeHttpChallengePath+"/", a.handleChallenge)
 
 	mux.HandleFunc(kubelego.AcmeHttpSelfTest, func(w http.ResponseWriter, r *http.Request) {
+		host := strings.Split(r.Host, ":")[0]
+		if !a.domainToVerifyExists(host) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/plain")
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		w.WriteHeader(http.StatusOK)

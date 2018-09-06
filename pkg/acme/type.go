@@ -23,6 +23,9 @@ type Acme struct {
 	challengesHostToToken map[string]string
 	challengesTokenToKey  map[string]string
 
+	domainsMutex    sync.RWMutex
+	domainsToVerify map[string]struct{}
+
 	notFound string // string displayed for 404 messages
 	id       string // identification (random string)
 

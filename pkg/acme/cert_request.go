@@ -70,7 +70,28 @@ func (a *Acme) testReachablilty(domain string) error {
 	return nil
 }
 
+func (a *Acme) enableDomainVerification(domain string) {
+	a.domainsMutex.Lock()
+	a.domainsToVerify[domain] = struct{}{}
+	a.domainsMutex.Unlock()
+}
+
+func (a *Acme) disableDomainVerification(domain string) {
+	a.domainsMutex.Lock()
+	delete(a.domainsToVerify, domain)
+	a.domainsMutex.Unlock()
+}
+
+func (a *Acme) domainToVerifyExists(domain string) bool {
+	a.domainsMutex.RLock()
+	_, ok := a.domainsToVerify[domain]
+	a.domainsMutex.RUnlock()
+	return ok
+}
+
 func (a *Acme) verifyDomain(domain string) (auth *acme.Authorization, err error) {
+	a.enableDomainVerification(domain)
+	defer a.disableDomainVerification(domain)
 	err = a.testReachablilty(domain)
 	if err != nil {
 		return nil, fmt.Errorf("reachability test failed: %s", err)
