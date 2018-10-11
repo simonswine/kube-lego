@@ -26,6 +26,7 @@ type KubeLego interface {
 	LegoSupportedIngressProvider() []string
 	LegoCheckInterval() time.Duration
 	LegoMinimumValidity() time.Duration
+	LegoWaitChallengeURL() time.Duration
 	LegoPodIP() net.IP
 	IngressProvider(string) (IngressProvider, error)
 	Version() string

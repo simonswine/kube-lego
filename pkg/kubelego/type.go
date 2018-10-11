@@ -30,6 +30,7 @@ type KubeLego struct {
 	legoHTTPPort                 intstr.IntOrString
 	legoCheckInterval            time.Duration
 	legoMinimumValidity          time.Duration
+	legoWaitChallengeURL         time.Duration
 	legoDefaultIngressClass      string
 	legoDefaultIngressProvider   string
 	legoKubeApiURL               string

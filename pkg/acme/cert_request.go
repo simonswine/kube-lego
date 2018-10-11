@@ -74,7 +74,13 @@ func (a *Acme) testReachablilty(domain string) error {
 }
 
 func (a *Acme) verifyDomain(domain string) (auth *acme.Authorization, err error) {
-	err = a.testReachablilty(domain)
+	sleep := a.kubelego.LegoWaitChallengeURL()
+	if sleep < 0 {
+		err = a.testReachablilty(domain)
+	} else {
+		time.Sleep(sleep)
+		err = nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("reachability test failed: %s", err)
 	}

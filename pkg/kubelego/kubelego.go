@@ -215,6 +215,10 @@ func (kl *KubeLego) LegoMinimumValidity() time.Duration {
 	return kl.legoMinimumValidity
 }
 
+func (kl *KubeLego) LegoWaitChallengeURL() time.Duration {
+	return kl.legoWaitChallengeURL
+}
+
 func (kl *KubeLego) LegoCheckInterval() time.Duration {
 	return kl.legoCheckInterval
 }
@@ -355,6 +359,17 @@ func (kl *KubeLego) paramsLego() error {
 			return fmt.Errorf("Smallest allowed minimum validity is 24 hours: %s", d)
 		}
 		kl.legoMinimumValidity = d
+	}
+
+	waitChallengeURL := os.Getenv("LEGO_WAIT_CHALLENGE_URL")
+	if len(waitChallengeURL) == 0 {
+		kl.legoWaitChallengeURL = -1
+	} else {
+		w, err := time.ParseDuration(waitChallengeURL)
+		if err != nil {
+			return err
+		}
+		kl.legoWaitChallengeURL = w
 	}
 
 	httpPortStr := os.Getenv("LEGO_PORT")

@@ -120,6 +120,7 @@ Please note:
 | `LEGO_PORT` | n | `8080` | Port where this daemon is listening for verifcation calls (HTTP method)|
 | `LEGO_CHECK_INTERVAL` | n | `8h` | Interval for periodically certificate checks (to find expired certs)|
 | `LEGO_MINIMUM_VALIDITY` | n | `720h` (30 days) | Request a renewal when the remaining certificate validity falls below that value|
+| `LEGO_WAIT_CHALLENGE_URL` | n | Check instead wait | Time with suffix, eg `10s`, to wait for the updating of the challenge URL. This will skip the checking if declared. Useful if for some reason the container network cannot reach the public URL. |
 | `LEGO_DEFAULT_INGRESS_CLASS` | n | `nginx` | Default ingress class for resources without specification|
 | `LEGO_KUBE_API_URL` | n | `http://127.0.0.1:8080` | API server URL |
 | `LEGO_LOG_LEVEL` | n | `info` | Set log level (`debug`, `info`, `warn` or `error`) |
